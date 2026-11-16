@@ -1,0 +1,83 @@
+{
+  "rung": "R2",
+  "model": "google/gemma-4-12B-it",
+  "provider": "rits",
+  "settings_sent": {
+    "params": {
+      "temperature": 1.0,
+      "top_p": 0.95,
+      "seed": 0
+    },
+    "extra_body": {},
+    "thinking": "not_applicable"
+  },
+  "tests": {
+    "1_chat": {
+      "pass": true,
+      "reply": "pong",
+      "error": null,
+      "latency_s": 1.222,
+      "usage": {
+        "prompt_tokens": 32,
+        "completion_tokens": 2,
+        "reasoning_tokens": 0
+      }
+    },
+    "2_system_prompt": {
+      "pass": true,
+      "reply": "BANANA",
+      "error": null
+    },
+    "3_structured": {
+      "pass": true,
+      "chosen_mode": "json_schema",
+      "modes": {
+        "json_schema": {
+          "valid": 5,
+          "of": 5,
+          "errors": []
+        }
+      },
+      "median_latency_s": 1.22
+    },
+    "4_long_context": {
+      "pass": true,
+      "prompt_tokens_reported": 19514,
+      "reply": "TANGO-4417",
+      "error": null,
+      "latency_s": 4.248
+    },
+    "5_latency": {
+      "median_latency_s_4k_prompt_300_tokens": 6.1,
+      "completion_tokens": [
+        300,
+        300,
+        300
+      ],
+      "concurrency": {
+        "1": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 0.36
+        },
+        "2": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 0.39
+        },
+        "4": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 0.5
+        },
+        "8": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 0.76
+        }
+      },
+      "safe_concurrency": 8
+    }
+  },
+  "pass_1_to_4": true
+}

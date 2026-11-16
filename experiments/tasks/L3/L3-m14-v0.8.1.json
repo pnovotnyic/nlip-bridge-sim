@@ -1,0 +1,164 @@
+{
+  "schema_version": "1",
+  "task_id": "L3-m14-v0.8.1",
+  "intent_id": "m14",
+  "pilot": false,
+  "api": "L3",
+  "operation": "createSession",
+  "client_version": "v0.8.1",
+  "server_version": "v1.1.0",
+  "versions_behind": 5,
+  "breaking_crossed": 21,
+  "breaking_crossed_ops": 14,
+  "catalogue_breaking_crossed": 16,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Create a high-throughput file transfer session for the device at 192.0.2.14 port 40014 to the CDN at 198.51.100.40, server port 443, for 3 hours.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/qod/v0/sessions",
+    "body": {
+      "duration": 10800,
+      "ueId": {
+        "ipv4addr": "192.0.2.14"
+      },
+      "asId": {
+        "ipv4addr": "198.51.100.40"
+      },
+      "asPorts": {
+        "ports": [
+          443
+        ]
+      },
+      "qos": "QOS_L"
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v0.8.1 createSession response: id (UUID), startedAt/expiresAt Unix int, ueId, asId, qos, [duration]",
+    "type": "object",
+    "required": [
+      "id",
+      "startedAt",
+      "expiresAt"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "startedAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "expiresAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "ueId": {
+        "type": "object"
+      },
+      "asId": {
+        "type": "object"
+      },
+      "qos": {
+        "type": "string"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D14"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/quality-on-demand/v1/sessions",
+      "body": {
+        "duration": 10800,
+        "device": {
+          "ipv4Address": {
+            "publicAddress": "192.0.2.14",
+            "publicPort": 40014
+          }
+        },
+        "applicationServer": {
+          "ipv4Address": "198.51.100.40"
+        },
+        "applicationServerPorts": {
+          "ports": [
+            443
+          ]
+        },
+        "qosProfile": "QOS_L"
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 201,
+    "body": {
+      "applicationServer": {
+        "ipv4Address": "198.51.100.40"
+      },
+      "applicationServerPorts": {
+        "ports": [
+          443
+        ]
+      },
+      "qosProfile": "QOS_L",
+      "sessionId": "08f3bc32-84f0-5c92-bcc3-dfc16b3f83e5",
+      "duration": 10800,
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T15:00:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "duration": 10800,
+      "asId": {
+        "ipv4addr": "198.51.100.40"
+      },
+      "asPorts": {
+        "ports": [
+          443
+        ]
+      },
+      "qos": "QOS_L",
+      "id": "08f3bc32-84f0-5c92-bcc3-dfc16b3f83e5",
+      "startedAt": 1796126400,
+      "expiresAt": 1796137200
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [
+    "device.ipv4Address.publicPort"
+  ],
+  "missing_info_source": {
+    "device.ipv4Address.publicPort": "intent_text"
+  },
+  "change_tags_request": [
+    "renamed",
+    "restructured",
+    "unit_format",
+    "newly_required"
+  ],
+  "change_tags_response": [
+    "renamed",
+    "unit_format",
+    "newly_required"
+  ],
+  "material_fields": [
+    "operation",
+    "sessionId",
+    "device",
+    "applicationServer",
+    "qosProfile",
+    "duration"
+  ],
+  "provenance": "authored"
+}

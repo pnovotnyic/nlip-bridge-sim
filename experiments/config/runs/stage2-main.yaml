@@ -1,0 +1,22 @@
+# Stage 2 main run: all non-pilot tasks × R2 R3 R4 × P1 P2 P3 × NLIP + NLIP-0
+# Run with: python -m nlipeval.runner.run --matrix config/runs/stage2-main.yaml
+
+run_id: null
+label: stage2-main
+stage: stage6
+
+task_filter:
+  apis: [L1, L2, L3]
+  main_only: true
+
+rungs: [R2, R3, R4]
+prompts: [P1, P2, P3]
+conditions: [NLIP, NLIP-0]
+attempt: 1
+
+concurrency:
+  R2: 8
+  R3: 8
+  R4: 8
+
+budget_calls: 50000

@@ -1,0 +1,10 @@
+api,stage,status,n
+L1,2,done,30
+L1,3,done,60
+L2,2,declined,5
+L2,2,done,25
+L2,3,declined,8
+L2,3,done,99
+L2,3,unrepresentable,13
+L3,2,done,30
+L3,3,done,150

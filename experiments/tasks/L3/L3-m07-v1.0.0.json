@@ -1,0 +1,148 @@
+{
+  "schema_version": "1",
+  "task_id": "L3-m07-v1.0.0",
+  "intent_id": "m07",
+  "pilot": false,
+  "api": "L3",
+  "operation": "createSession",
+  "client_version": "v1.0.0",
+  "server_version": "v1.1.0",
+  "versions_behind": 1,
+  "breaking_crossed": 0,
+  "breaking_crossed_ops": 0,
+  "catalogue_breaking_crossed": 2,
+  "prompt_half": true,
+  "pilot_round": null,
+  "intent_text": "Give phone +9901000007 a low-latency session to the game server at 198.51.100.20 for 20 minutes, with notifications to https://app.example.org/notify/session.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/quality-on-demand/v1/sessions",
+    "body": {
+      "duration": 1200,
+      "device": {
+        "phoneNumber": "+9901000007"
+      },
+      "applicationServer": {
+        "ipv4Address": "198.51.100.20"
+      },
+      "qosProfile": "QOS_E",
+      "sink": "https://app.example.org/notify/session"
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v1.0.0 createSession: same as v0.11.0",
+    "type": "object",
+    "required": [
+      "sessionId",
+      "duration",
+      "qosStatus"
+    ],
+    "properties": {
+      "sessionId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "startedAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "expiresAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "device": {
+        "type": "object"
+      },
+      "applicationServer": {
+        "type": "object"
+      },
+      "qosProfile": {
+        "type": "string"
+      },
+      "qosStatus": {
+        "type": "string",
+        "enum": [
+          "REQUESTED",
+          "AVAILABLE",
+          "UNAVAILABLE"
+        ]
+      },
+      "statusInfo": {
+        "type": "string"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D07"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/quality-on-demand/v1/sessions",
+      "body": {
+        "duration": 1200,
+        "device": {
+          "phoneNumber": "+9901000007"
+        },
+        "applicationServer": {
+          "ipv4Address": "198.51.100.20"
+        },
+        "qosProfile": "QOS_E",
+        "sink": "https://app.example.org/notify/session"
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 201,
+    "body": {
+      "applicationServer": {
+        "ipv4Address": "198.51.100.20"
+      },
+      "qosProfile": "QOS_E",
+      "sink": "https://app.example.org/notify/session",
+      "sessionId": "40152eca-85a6-5f83-88eb-0cb18601dafe",
+      "duration": 1200,
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T12:20:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "duration": 1200,
+      "applicationServer": {
+        "ipv4Address": "198.51.100.20"
+      },
+      "qosProfile": "QOS_E",
+      "sessionId": "40152eca-85a6-5f83-88eb-0cb18601dafe",
+      "sink": "https://app.example.org/notify/session",
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T12:20:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [
+    "unit_format"
+  ],
+  "change_tags_response": [
+    "unit_format"
+  ],
+  "material_fields": [
+    "operation",
+    "sessionId",
+    "device",
+    "applicationServer",
+    "qosProfile",
+    "duration"
+  ],
+  "provenance": "authored"
+}

@@ -1,0 +1,14 @@
+# World: existing QoD sessions (stage 04), used by the get and delete tasks. Devices D31-D40 only; creates use D01-D30.
+# started_ago_s: seconds before the task clock. duration_s: granted duration (for UNAVAILABLE: effective overall duration).
+# expiresAt = startedAt + duration_s. An AVAILABLE session must still be running at the clock: started_ago_s < duration_s.
+sessions:
+  - {id: "a1b2c3d4-0001-4000-8000-000000000001", device: D31, application_server: {ipv4Address: "198.51.100.10"}, qos_profile: QOS_E, duration_s: 1800, started_ago_s: 300, qos_status: AVAILABLE, device_ports: {"ports": [5060]}, sink: "https://app.example.org/notify/1"}
+  - {id: "a1b2c3d4-0001-4000-8000-000000000002", device: D32, application_server: {ipv4Address: "198.51.100.20"}, qos_profile: QOS_M, duration_s: 3600, started_ago_s: 900, qos_status: AVAILABLE, application_server_ports: {"ranges": [{"from": 5000, "to": 5100}]}}
+  - {id: "a1b2c3d4-0001-4000-8000-000000000003", device: D33, application_server: {ipv4Address: "198.51.100.30/32"}, qos_profile: QOS_S, duration_s: 7200, started_ago_s: 1200, qos_status: AVAILABLE, device_ports: {"ports": [8080, 8443]}}
+  - {id: "a1b2c3d4-0001-4000-8000-000000000004", device: D34, application_server: {ipv6Address: "2001:db8:b::10"}, qos_profile: QOS_L, duration_s: 10800, started_ago_s: 600, qos_status: AVAILABLE, application_server_ports: {"ports": [443]}, sink: "https://app.example.org/notify/4"}
+  - {id: "a1b2c3d4-0001-4000-8000-000000000005", device: D35, application_server: {ipv4Address: "198.51.100.40"}, qos_profile: QOS_E, duration_s: 1200, started_ago_s: 200, qos_status: AVAILABLE}
+  - {id: "a1b2c3d4-0001-4000-8000-000000000006", device: D36, application_server: {ipv4Address: "198.51.100.0/24"}, qos_profile: QOS_M, duration_s: 5400, started_ago_s: 1800, qos_status: AVAILABLE, device_ports: {"ranges": [{"from": 6000, "to": 6010}]}, application_server_ports: {"ports": [3478]}}
+  - {id: "a1b2c3d4-0001-4000-8000-000000000007", device: D37, application_server: {ipv4Address: "198.51.100.50"}, qos_profile: QOS_S, duration_s: 3600, started_ago_s: 500, qos_status: AVAILABLE, sink: "https://app.example.org/notify/7"}
+  - {id: "a1b2c3d4-0001-4000-8000-000000000008", device: D38, application_server: {ipv6Address: "2001:db8:b::/64"}, qos_profile: QOS_M, duration_s: 3600, started_ago_s: 100, qos_status: AVAILABLE, application_server_ports: {"ports": [5004]}}
+  - {id: "a1b2c3d4-0001-4000-8000-000000000009", device: D39, application_server: {ipv4Address: "198.51.100.60"}, qos_profile: QOS_E, duration_s: 1800, started_ago_s: 5400, qos_status: UNAVAILABLE, status_info: DURATION_EXPIRED}
+  - {id: "a1b2c3d4-0001-4000-8000-000000000010", device: D40, application_server: {ipv4Address: "198.51.100.70"}, qos_profile: QOS_L, duration_s: 2428, started_ago_s: 4000, qos_status: UNAVAILABLE, status_info: NETWORK_TERMINATED}

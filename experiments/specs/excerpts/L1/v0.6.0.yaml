@@ -1,0 +1,647 @@
+openapi: 3.0.3
+info:
+  title: Device Reachability Status
+  version: 0.6.0
+paths:
+  /retrieve:
+    post:
+      tags:
+      - Device reachability status
+      summary: Get the current reachability status information
+      description: Get the current reachability status information
+      operationId: getReachabilityStatus
+      parameters:
+      - name: x-correlator
+        in: header
+        description: Correlation id for the different services
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: The request to retrieve the current roaming-status for the requested device.
+              type: object
+              properties:
+                device:
+                  description: 'End-user equipment able to connect to a mobile network. Examples of devices include smartphones
+                    or IoT sensors/actuators.
+
+
+                    The developer can choose to provide the below specified device identifiers:
+
+
+                    * `ipv4Address`
+
+                    * `ipv6Address`
+
+                    * `phoneNumber`
+
+                    * `networkAccessIdentifier`
+
+
+                    NOTE: the MNO might support only a subset of these options. The API invoker can provide multiple identifiers
+                    to be compatible across different MNOs. In this case the identifiers MUST belong to the same device.
+
+                    '
+                  type: object
+                  properties:
+                    phoneNumber:
+                      description: A public identifier addressing a telephone subscription. In mobile networks it corresponds
+                        to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally
+                        unique it has to be formatted in international format, according to E.164 standard, prefixed with
+                        '+'.
+                      type: string
+                      pattern: ^\+[1-9][0-9]{4,14}$
+                      example: '+123456789'
+                    networkAccessIdentifier:
+                      description: A public identifier addressing a subscription in a mobile network. In 3GPP terminology,
+                        it corresponds to the GPSI formatted with the External Identifier ({Local Identifier}@{Domain Identifier}).
+                        Unlike the telephone number, the network access identifier is not subjected to portability ruling
+                        in force, and is individually managed by each operator.
+                      type: string
+                      example: 123456789@domain.com
+                    ipv4Address:
+                      type: object
+                      description: 'The device should be identified by either the public (observed) IP address and port as
+                        seen by the application server, or the private (local) and any public (observed) IP addresses in use
+                        by the device (this information can be obtained by various means, for example from some DNS servers).
+
+
+                        If the allocated and observed IP addresses are the same (i.e. NAT is not in use) then  the same address
+                        should be specified for both publicAddress and privateAddress.
+
+
+                        If NAT64 is in use, the device should be identified by its publicAddress and publicPort, or separately
+                        by its allocated IPv6 address (field ipv6Address of the Device object)
+
+
+                        In all cases, publicAddress must be specified, along with at least one of either privateAddress or
+                        publicPort, dependent upon which is known. In general, mobile devices cannot be identified by their
+                        public IPv4 address alone.
+
+                        '
+                      properties:
+                        publicAddress:
+                          description: A single IPv4 address with no subnet mask
+                          type: string
+                          format: ipv4
+                          example: 84.125.93.10
+                        privateAddress:
+                          description: A single IPv4 address with no subnet mask
+                          type: string
+                          format: ipv4
+                          example: 84.125.93.10
+                        publicPort:
+                          description: TCP or UDP port number
+                          type: integer
+                          minimum: 0
+                          maximum: 65535
+                      anyOf:
+                      - required:
+                        - publicAddress
+                        - privateAddress
+                      - required:
+                        - publicAddress
+                        - publicPort
+                      example:
+                        publicAddress: 84.125.93.10
+                        publicPort: 59765
+                    ipv6Address:
+                      description: 'The device should be identified by the observed IPv6 address, or by any single IPv6 address
+                        from within the subnet allocated to the device (e.g. adding ::0 to the /64 prefix).
+
+                        '
+                      type: string
+                      format: ipv6
+                      example: 2001:db8:85a3:8d3:1319:8a2e:370:7344
+                  minProperties: 1
+        required: true
+      responses:
+        '200':
+          description: Contains information about current reachability status
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - reachabilityStatus
+                properties:
+                  lastStatusTime:
+                    description: Last time that the associated device reachability status was updated
+                    type: string
+                    format: date-time
+                    example: '2024-02-20T10:41:38.657Z'
+                  reachabilityStatus:
+                    description: 'CONNECTED_DATA: The device is connected to the network for Data usage
+
+
+                      CONNECTED_SMS: The device is connected to the network for SMS usage
+
+
+                      NOT_CONNECTED: The device is not connected
+
+                      '
+                    type: string
+                    enum:
+                    - CONNECTED_DATA
+                    - CONNECTED_SMS
+                    - NOT_CONNECTED
+              examples:
+                Connected-With-SMS:
+                  value:
+                    lastStatusTime: '2024-02-20T10:41:38.657Z'
+                    reachabilityStatus: CONNECTED_SMS
+                Connected-With-DATA:
+                  value:
+                    lastStatusTime: '2024-02-20T10:41:38.657Z'
+                    reachabilityStatus: CONNECTED_DATA
+                Not-Connected:
+                  value:
+                    lastStatusTime: '2024-02-20T10:41:38.657Z'
+                    reachabilityStatus: NOT_CONNECTED
+        '400':
+          description: Problem with the client request
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_400_INVALID_ARGUMENT:
+                  description: Invalid Argument. Generic Syntax Exception
+                  value:
+                    status: 400
+                    code: INVALID_ARGUMENT
+                    message: Client specified an invalid argument, request body or query param.
+        '401':
+          description: Unauthorized
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_401_UNAUTHENTICATED:
+                  description: Request cannot be authenticated
+                  value:
+                    status: 401
+                    code: UNAUTHENTICATED
+                    message: Request not authenticated due to missing, invalid, or expired credentials.
+                GENERIC_401_AUTHENTICATION_REQUIRED:
+                  description: New authentication is needed, authentication is no longer valid
+                  value:
+                    status: 401
+                    code: AUTHENTICATION_REQUIRED
+                    message: New authentication is required.
+        '403':
+          description: "Client does not have sufficient permission.\nIn addition to regular scenario of `PERMISSION_DENIED`,\
+            \ other scenarios may exist:\n  - Phone number cannot be deducted from access token context.(`{\"code\": \"INVALID_TOKEN_CONTEXT\"\
+            ,\"message\": \"Phone number cannot be deducted from access token context\"}`)\n"
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_403_PERMISSION_DENIED:
+                  description: Permission denied. OAuth2 token access does not have the required scope or when the user fails
+                    operational security
+                  value:
+                    status: 403
+                    code: PERMISSION_DENIED
+                    message: Client does not have sufficient permissions to perform this action.
+                GENERIC_403_INVALID_TOKEN_CONTEXT:
+                  description: Reflect some inconsistency between information in some field of the API and the related OAuth2
+                    Token
+                  value:
+                    status: 403
+                    code: INVALID_TOKEN_CONTEXT
+                    message: '{{field}} is not consistent with access token.'
+        '404':
+          description: Resource Not Found
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                NOT_FOUND:
+                  value:
+                    status: 404
+                    code: NOT_FOUND
+                    message: The specified resource is not found
+                DEVICE_IDENTIFIER_NOT_FOUND:
+                  value:
+                    status: 404
+                    code: DEVICE_NOT_FOUND
+                    message: Some identifier cannot be matched to a device
+        '406':
+          description: Not Acceptable
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_406_NOT_ACCEPTABLE:
+                  description: API Server does not accept the media type (`Accept-*` header) indicated by API client
+                  value:
+                    status: 406
+                    code: NOT_ACCEPTABLE
+                    message: The server cannot produce a response matching the content requested by the client through `Accept-*`
+                      headers.
+        '415':
+          description: Unsupported Media Type
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_415_UNSUPPORTED_MEDIA_TYPE:
+                  description: Payload format of the request is in an unsupported format by the Server. Should not happen
+                  value:
+                    status: 415
+                    code: UNSUPPORTED_MEDIA_TYPE
+                    message: The server refuses to accept the request because the payload format is in an unsupported format.
+        '422':
+          description: Unprocessable Entity
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_422_DEVICE_IDENTIFIERS_MISMATCH:
+                  description: Inconsistency between device identifiers not pointing to the same device
+                  value:
+                    status: 422
+                    code: DEVICE_IDENTIFIERS_MISMATCH
+                    message: Provided device identifiers are not consistent.
+                GENERIC_422_DEVICE_NOT_APPLICABLE:
+                  description: Service is not available for the provided device
+                  value:
+                    status: 422
+                    code: DEVICE_NOT_APPLICABLE
+                    message: The service is not available for the provided device.
+                GENERIC_422_UNABLE_TO_PROVIDE_REACHABILITY_STATUS:
+                  value:
+                    status: 422
+                    code: UNABLE_TO_PROVIDE_REACHABILITY_STATUS
+                    message: Network issue - Unable to provide reachability status
+                GENERIC_422_UNSUPPORTED_DEVICE_IDENTIFIERS:
+                  value:
+                    status: 422
+                    code: UNSUPPORTED_DEVICE_IDENTIFIERS
+                    message: None of the provided device identifiers is supported by the implementation
+        '429':
+          description: Too Many Requests
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_429_QUOTA_EXCEEDED:
+                  description: Request is rejected due to exceeding a business quota limit
+                  value:
+                    status: 429
+                    code: QUOTA_EXCEEDED
+                    message: Either out of resource quota or reaching rate limiting.
+                GENERIC_429_TOO_MANY_REQUESTS:
+                  description: API Server request limit is overpassed
+                  value:
+                    status: 429
+                    code: TOO_MANY_REQUESTS
+                    message: Either out of resource quota or reaching rate limiting.
+        '500':
+          description: Internal Server Error
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_500_INTERNAL:
+                  description: Problem in Server side. Regular Server Exception
+                  value:
+                    status: 500
+                    code: INTERNAL
+                    message: Unknown server error. Typically a server bug.
+        '501':
+          description: Not Implemented
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_501_NOT_IMPLEMENTED:
+                  description: Service not implemented. The use of this code should be avoided as far as possible to get the
+                    objective to reach aligned implementations
+                  value:
+                    status: 501
+                    code: NOT_IMPLEMENTED
+                    message: This functionality is not implemented yet.
+        '502':
+          description: Bad Gateway
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_502_BAD_GATEWAY:
+                  description: Internal routing problem in the Server side that blocks to manage the service properly
+                  value:
+                    status: 502
+                    code: BAD_GATEWAY
+                    message: An upstream internal service cannot be reached.
+        '503':
+          description: Service Unavailable
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_503_UNAVAILABLE:
+                  description: Service is not available. Temporary situation usually related to maintenance process in the
+                    server side
+                  value:
+                    status: 503
+                    code: UNAVAILABLE
+                    message: Service Unavailable.
+        '504':
+          description: Gateway Timeout
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: The error object used for error-cases.
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              examples:
+                GENERIC_504_TIMEOUT:
+                  description: API Server Timeout
+                  value:
+                    status: 504
+                    code: TIMEOUT
+                    message: Request timeout exceeded.
+servers:
+- url: '{apiRoot}/device-reachability-status/v0.6'
+  variables:
+    apiRoot:
+      default: http://localhost:9091
+      description: API root

@@ -1,0 +1,423 @@
+# L1 Device Reachability Status intents (stage 05).
+# Server version: v1.0.0. Client versions used in Stage 3: v0.5.1, v0.6.0.
+# 30 main intents (m01–m30) + 10 pilot intents (p01–p10).
+# prompt_half: true for odd-numbered main intents (m01, m03, m05, ..., m29).
+# pilot_round: A for p01–p05; B for p06–p10.
+# Device identifier types: phone, IPv4+port, IPv6, networkAccessIdentifier.
+# Reachability states: DATA_SMS, DATA_ONLY, SMS_ONLY, NONE.
+# World constraint: creates/reads use D01–D30; NAI-only gets declined.
+# Fact rules (07b A6): `client_facts` hold only what the client itself knows and the intent text does not say:
+#   - a second device identifier (NAI-only intents), or
+#   - a preference that decides between alternatives the client's interface allows.
+# A fact never states the world's state (no "cannot locate", "unreachable", "expired"), never names a server-only
+# field, and never quotes a profile or service limit. Every fact is consistent with the gold call.
+
+api: L1
+server_version: v1.0.0
+operation: retrieveReachability
+
+main:
+  - id: m01
+    prompt_half: true
+    intent_text: "Is the phone +9901000001 reachable right now?"
+    params:
+      device_id: D01
+      identifier: phone_number
+    world_ref: {device: D01}
+    client_facts: []
+    provenance: authored
+
+  - id: m02
+    prompt_half: false
+    intent_text: "Check whether the device at IPv4 address 192.0.2.2 port 40002 can be reached."
+    params:
+      device_id: D02
+      identifier: ipv4_with_port
+    world_ref: {device: D02}
+    client_facts: []
+    provenance: authored
+
+  - id: m03
+    prompt_half: true
+    intent_text: "Is the device with IPv6 address 2001:db8:a:3::1 reachable?"
+    params:
+      device_id: D03
+      identifier: ipv6
+    world_ref: {device: D03}
+    client_facts: []
+    provenance: authored
+
+  - id: m04
+    prompt_half: false
+    intent_text: "Check if phone +9901000004 is reachable."
+    params:
+      device_id: D04
+      identifier: phone_number
+    world_ref: {device: D04}
+    client_facts: []
+    provenance: authored
+
+  - id: m05
+    prompt_half: true
+    intent_text: "Can the device at 192.0.2.5 port 40005 be reached?"
+    params:
+      device_id: D05
+      identifier: ipv4_with_port
+    world_ref: {device: D05}
+    client_facts: []
+    provenance: authored
+
+  - id: m06
+    prompt_half: false
+    intent_text: "Is the device at IPv6 address 2001:db8:a:6::1 currently reachable?"
+    params:
+      device_id: D06
+      identifier: ipv6
+    world_ref: {device: D06}
+    client_facts: []
+    provenance: authored
+
+  - id: m07
+    prompt_half: true
+    intent_text: "Check the reachability status for phone +9901000007."
+    params:
+      device_id: D07
+      identifier: phone_number
+    world_ref: {device: D07}
+    client_facts: []
+    provenance: authored
+
+  - id: m08
+    prompt_half: false
+    intent_text: "Is the device at address 192.0.2.8 port 40008 reachable?"
+    params:
+      device_id: D08
+      identifier: ipv4_with_port
+    world_ref: {device: D08}
+    client_facts: []
+    provenance: authored
+
+  - id: m09
+    prompt_half: true
+    intent_text: "Find out if the device with IPv6 address 2001:db8:a:9::1 can be reached."
+    params:
+      device_id: D09
+      identifier: ipv6
+    world_ref: {device: D09}
+    client_facts: []
+    provenance: authored
+
+  - id: m10
+    prompt_half: false
+    intent_text: "Check whether +9901000010 is reachable on the network."
+    params:
+      device_id: D10
+      identifier: phone_number
+    world_ref: {device: D10}
+    client_facts: []
+    provenance: authored
+
+  - id: m11
+    prompt_half: true
+    intent_text: "Is the device at 192.0.2.11 port 40011 currently reachable?"
+    params:
+      device_id: D11
+      identifier: ipv4_with_port
+    world_ref: {device: D11}
+    client_facts: []
+    provenance: authored
+
+  - id: m12
+    prompt_half: false
+    intent_text: "Can the device with IPv6 address 2001:db8:a:c::1 be reached?"
+    params:
+      device_id: D12
+      identifier: ipv6
+    world_ref: {device: D12}
+    client_facts: []
+    provenance: authored
+
+  - id: m13
+    prompt_half: true
+    intent_text: "Check the reachability of phone number +9901000013."
+    params:
+      device_id: D13
+      identifier: phone_number
+    world_ref: {device: D13}
+    client_facts: []
+    provenance: authored
+
+  - id: m14
+    prompt_half: false
+    intent_text: "Is the device at 192.0.2.14 port 40014 reachable on the network?"
+    params:
+      device_id: D14
+      identifier: ipv4_with_port
+    world_ref: {device: D14}
+    client_facts: []
+    provenance: authored
+
+  - id: m15
+    prompt_half: true
+    intent_text: "Find out if the device with IPv6 2001:db8:a:f::1 is reachable."
+    params:
+      device_id: D15
+      identifier: ipv6
+    world_ref: {device: D15}
+    client_facts: []
+    provenance: authored
+
+  - id: m16
+    prompt_half: false
+    intent_text: "Is phone +9901000016 currently reachable?"
+    params:
+      device_id: D16
+      identifier: phone_number
+    world_ref: {device: D16}
+    client_facts: []
+    provenance: authored
+
+  - id: m17
+    prompt_half: true
+    intent_text: "Check if the device at 192.0.2.17 port 40017 is reachable."
+    params:
+      device_id: D17
+      identifier: ipv4_with_port
+    world_ref: {device: D17}
+    client_facts: []
+    provenance: authored
+
+  - id: m18
+    prompt_half: false
+    intent_text: "Is the device with IPv6 address 2001:db8:a:12::1 reachable?"
+    params:
+      device_id: D18
+      identifier: ipv6
+    world_ref: {device: D18}
+    client_facts: []
+    provenance: authored
+
+  - id: m19
+    prompt_half: true
+    intent_text: "Check reachability of phone +9901000019."
+    params:
+      device_id: D19
+      identifier: phone_number
+    world_ref: {device: D19}
+    client_facts: []
+    provenance: authored
+
+  - id: m20
+    prompt_half: false
+    intent_text: "Is the device at 192.0.2.20 port 40020 reachable right now?"
+    params:
+      device_id: D20
+      identifier: ipv4_with_port
+    world_ref: {device: D20}
+    client_facts: []
+    provenance: authored
+
+  - id: m21
+    prompt_half: true
+    intent_text: "Can the device with IPv6 address 2001:db8:a:15::1 be reached on the network?"
+    params:
+      device_id: D21
+      identifier: ipv6
+    world_ref: {device: D21}
+    client_facts: []
+    provenance: authored
+
+  - id: m22
+    prompt_half: false
+    intent_text: "Is phone number +9901000022 reachable?"
+    params:
+      device_id: D22
+      identifier: phone_number
+    world_ref: {device: D22}
+    client_facts: []
+    provenance: authored
+
+  - id: m23
+    prompt_half: true
+    # NAI-only: client knows only the NAI; facts say to give a second identifier (phone), expected path is question+answer+success
+    intent_text: "Check whether the device of subscriber dev023@nlipeval.example is reachable."
+    params:
+      device_id: D23
+      identifier: network_access_identifier
+    world_ref: {device: D23}
+    client_facts:
+      - {fact: "phone_number", value: "+9901000023"}
+    provenance: authored
+
+  - id: m24
+    prompt_half: false
+    intent_text: "Is the device at 192.0.2.24 port 40024 currently accessible on the network?"
+    params:
+      device_id: D24
+      identifier: ipv4_with_port
+    world_ref: {device: D24}
+    client_facts: []
+    provenance: authored
+
+  - id: m25
+    prompt_half: true
+    intent_text: "Find out if the device with IPv6 2001:db8:a:19::1 is reachable."
+    params:
+      device_id: D25
+      identifier: ipv6
+    world_ref: {device: D25}
+    client_facts: []
+    provenance: authored
+
+  - id: m26
+    prompt_half: false
+    intent_text: "Is phone +9901000026 reachable on the network right now?"
+    params:
+      device_id: D26
+      identifier: phone_number
+    world_ref: {device: D26}
+    client_facts: []
+    provenance: authored
+
+  - id: m27
+    prompt_half: true
+    intent_text: "Check the reachability of the device at 192.0.2.27 port 40027."
+    params:
+      device_id: D27
+      identifier: ipv4_with_port
+    world_ref: {device: D27}
+    client_facts: []
+    provenance: authored
+
+  - id: m28
+    prompt_half: false
+    intent_text: "Is the device with IPv6 address 2001:db8:a:1c::1 reachable?"
+    params:
+      device_id: D28
+      identifier: ipv6
+    world_ref: {device: D28}
+    client_facts: []
+    provenance: authored
+
+  - id: m29
+    prompt_half: true
+    intent_text: "Can phone +9901000029 be reached?"
+    params:
+      device_id: D29
+      identifier: phone_number
+    world_ref: {device: D29}
+    client_facts: []
+    provenance: authored
+
+  - id: m30
+    prompt_half: false
+    # NAI-only: client knows only NAI; facts give the IPv6 address so the expected path is question+answer+success
+    intent_text: "Check if the device of subscriber dev030@nlipeval.example is reachable."
+    params:
+      device_id: D30
+      identifier: network_access_identifier
+    world_ref: {device: D30}
+    client_facts:
+      - {fact: "ipv6_address", value: "2001:db8:a:1e::1"}
+    provenance: authored
+
+pilot:
+  - id: p01
+    pilot_round: A
+    intent_text: "Is phone +9901000001 reachable right now?"
+    params:
+      device_id: D01
+      identifier: phone_number
+    world_ref: {device: D01}
+    client_facts: []
+    provenance: authored
+
+  - id: p02
+    pilot_round: A
+    intent_text: "Check if the device at 192.0.2.6 port 40006 is reachable."
+    params:
+      device_id: D06
+      identifier: ipv4_with_port
+    world_ref: {device: D06}
+    client_facts: []
+    provenance: authored
+
+  - id: p03
+    pilot_round: A
+    intent_text: "Is the device with IPv6 address 2001:db8:a:9::1 reachable?"
+    params:
+      device_id: D09
+      identifier: ipv6
+    world_ref: {device: D09}
+    client_facts: []
+    provenance: authored
+
+  - id: p04
+    pilot_round: A
+    intent_text: "Check whether phone +9901000016 is currently reachable."
+    params:
+      device_id: D16
+      identifier: phone_number
+    world_ref: {device: D16}
+    client_facts: []
+    provenance: authored
+
+  - id: p05
+    pilot_round: A
+    intent_text: "Is the device at 192.0.2.21 port 40021 reachable?"
+    params:
+      device_id: D21
+      identifier: ipv4_with_port
+    world_ref: {device: D21}
+    client_facts: []
+    provenance: authored
+
+  - id: p06
+    pilot_round: B
+    intent_text: "Find out if the device with IPv6 2001:db8:a:3::1 is reachable."
+    params:
+      device_id: D03
+      identifier: ipv6
+    world_ref: {device: D03}
+    client_facts: []
+    provenance: authored
+
+  - id: p07
+    pilot_round: B
+    intent_text: "Is phone +9901000012 reachable on the network?"
+    params:
+      device_id: D12
+      identifier: phone_number
+    world_ref: {device: D12}
+    client_facts: []
+    provenance: authored
+
+  - id: p08
+    pilot_round: B
+    intent_text: "Check if 192.0.2.17 port 40017 is reachable right now."
+    params:
+      device_id: D17
+      identifier: ipv4_with_port
+    world_ref: {device: D17}
+    client_facts: []
+    provenance: authored
+
+  - id: p09
+    pilot_round: B
+    intent_text: "Is the device with IPv6 2001:db8:a:1b::1 reachable?"
+    params:
+      device_id: D27
+      identifier: ipv6
+    world_ref: {device: D27}
+    client_facts: []
+    provenance: authored
+
+  - id: p10
+    pilot_round: B
+    intent_text: "Can phone +9901000030 be reached?"
+    params:
+      device_id: D30
+      identifier: phone_number
+    world_ref: {device: D30}
+    client_facts: []
+    provenance: authored

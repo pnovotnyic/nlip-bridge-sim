@@ -1,0 +1,498 @@
+# L2 Device Location Verification intents (stage 05).
+# Server version: v3.0.0. Client versions used in Stage 3: v2.0.0, v1.0.0, v0.2.0, v0.1.0.
+# 30 main intents (m01–m30) + 10 pilot intents (p01–p10).
+# prompt_half: true for odd-numbered main intents (m01, m03, ..., m29).
+# pilot_round: A for p01–p05; B for p06–p10.
+# Area constraints: radius >= 2000 m (v0.1.0 `accuracy` minimum is 2 km, 07b A3); centre inside coverage box (lat 35–60, lon -12–25).
+# maxAge: v0.1.0 has no maxAge field; use only where the client version supports it.
+# verificationResult at v0.1.0 is a boolean; PARTIAL / UNKNOWN are unrepresentable.
+# Backend rule: at most 2 NAI-only intents.
+# World outcome distribution: TRUE, FALSE, PARTIAL, unknown location.
+# Fact rules (07b A6): `client_facts` hold only what the client itself knows and the intent text does not say:
+#   - a second device identifier (NAI-only intents), or
+#   - a preference that decides between alternatives the client's interface allows.
+# A fact never states the world's state (no "cannot locate", "unreachable", "expired"), never names a server-only
+# field, and never quotes a profile or service limit. Every fact is consistent with the gold call.
+
+api: L2
+server_version: v3.0.0
+operation: verifyLocation
+
+# Coverage box from world.py service.yaml (lat 35–60, lon -12–25)
+# Devices with known location that fit within the coverage box:
+# D01: Berlin 52.52,13.41, acc 800m -> area 1000m radius -> likely TRUE (d + 800 <= 1000 for nearby center)
+# D02: Prague 50.08,14.43, acc 1500m -> area 2000m radius -> PARTIAL
+# D04: Paris 48.86,2.35, acc 4000m -> area 3000m radius -> FALSE (acc > radius)
+# D05: Madrid 40.41,-3.72, acc 1200m -> area 2000m radius -> TRUE
+# D06: Rome 41.90,12.50, acc 800m -> area 1000m radius -> TRUE
+# D07: Amsterdam 52.38,4.90, acc 1500m -> area 2000m radius -> PARTIAL
+# D08: Warsaw 52.23,21.02, acc 2500m -> area 1500m radius -> FALSE
+# D09: Budapest 47.50,19.04, acc 4000m -> area 2000m radius -> FALSE (acc too big)
+# D10: Zurich 47.37,8.53, acc 1200m -> area 2000m radius -> TRUE (d + 1200 <= 2000 for exact center)
+# D12: Dublin 53.36,-6.27, acc 1500m -> area 2000m radius -> PARTIAL
+# D13: Bonn 50.73,7.11, acc 2500m -> area 1500m radius -> FALSE
+# D14: Berlin 52.52,13.41 (D14 at 52.524, 13.405), acc 4000m -> area 2000m -> FALSE
+# D16: Vienna 48.21,16.38, acc 800m -> area 1500m radius -> TRUE
+# D17: Paris 48.86,2.35 (D17 at 48.864, 2.346), acc 1500m -> area 2000m -> PARTIAL
+# D22: Budapest 47.51,19.03, acc 1500m -> area 2000m -> PARTIAL
+# D24: Lisbon 38.73,-9.14, acc 4000m -> area 3000m -> FALSE (acc > radius)
+# D25: Dublin 53.34,-6.27, acc 1200m -> area 2000m -> TRUE
+# D26: Bonn 50.74,7.11, acc 800m -> area 1000m -> TRUE
+# Devices with no location: D03, D11, D19, D27 -> UNABLE_TO_LOCATE
+
+main:
+  - id: m01
+    prompt_half: true
+    intent_text: "Check if phone +9901000001 is located within 2 km of 52.520, 13.411 in Berlin."
+    params:
+      device_id: D01
+      identifier: phone_number
+      area: {center: {latitude: 52.520, longitude: 13.411}, radius: 2000}
+    world_ref: {device: D01}
+    client_facts: []
+    provenance: authored
+
+  - id: m02
+    prompt_half: false
+    intent_text: "Is the device at 192.0.2.2 port 40002 within 2 km of 50.083, 14.432 in Prague?"
+    params:
+      device_id: D02
+      identifier: ipv4_with_port
+      area: {center: {latitude: 50.083, longitude: 14.432}, radius: 2000}
+    world_ref: {device: D02}
+    client_facts: []
+    provenance: authored
+
+  - id: m03
+    prompt_half: true
+    # D03 has no known location -> UNABLE_TO_LOCATE (without maxAge); no fact: the client does not know this
+    intent_text: "Is the device with IPv6 address 2001:db8:a:3::1 within 2 km of 51.500, 10.000?"
+    params:
+      device_id: D03
+      identifier: ipv6
+      area: {center: {latitude: 51.500, longitude: 10.000}, radius: 2000}
+    world_ref: {device: D03}
+    client_facts: []
+    provenance: authored
+
+  - id: m04
+    prompt_half: false
+    intent_text: "Is phone +9901000004 within 3 km of 48.860, 2.352 in Paris?"
+    params:
+      device_id: D04
+      identifier: phone_number
+      area: {center: {latitude: 48.860, longitude: 2.352}, radius: 3000}
+    world_ref: {device: D04}
+    client_facts: []
+    provenance: authored
+
+  - id: m05
+    prompt_half: true
+    intent_text: "Is the device at 192.0.2.5 port 40005 located within 2 km of 40.408, -3.716 in Madrid?"
+    params:
+      device_id: D05
+      identifier: ipv4_with_port
+      area: {center: {latitude: 40.408, longitude: -3.716}, radius: 2000}
+    world_ref: {device: D05}
+    client_facts: []
+    provenance: authored
+
+  - id: m06
+    prompt_half: false
+    intent_text: "Is the device with IPv6 2001:db8:a:6::1 within 2 km of 41.902, 12.502 in Rome?"
+    params:
+      device_id: D06
+      identifier: ipv6
+      area: {center: {latitude: 41.902, longitude: 12.502}, radius: 2000}
+    world_ref: {device: D06}
+    client_facts: []
+    provenance: authored
+
+  - id: m07
+    prompt_half: true
+    intent_text: "Check if phone +9901000007 is within 2 km of 52.376, 4.898 in Amsterdam."
+    params:
+      device_id: D07
+      identifier: phone_number
+      area: {center: {latitude: 52.376, longitude: 4.898}, radius: 2000}
+    world_ref: {device: D07}
+    client_facts: []
+    provenance: authored
+
+  - id: m08
+    prompt_half: false
+    intent_text: "Is the device at 192.0.2.8 port 40008 within 2 km of 52.225, 21.024 in Warsaw?"
+    params:
+      device_id: D08
+      identifier: ipv4_with_port
+      area: {center: {latitude: 52.225, longitude: 21.024}, radius: 2000}
+    world_ref: {device: D08}
+    client_facts: []
+    provenance: authored
+
+  - id: m09
+    prompt_half: true
+    # D09: Budapest, acc 4000m vs radius 2000m -> FALSE; also maxAge constraint
+    intent_text: "Is the device with IPv6 2001:db8:a:9::1 within 2 km of 47.501, 19.040 in Budapest, using a location no older than 10 minutes?"
+    params:
+      device_id: D09
+      identifier: ipv6
+      area: {center: {latitude: 47.501, longitude: 19.040}, radius: 2000}
+      max_age: 600
+    world_ref: {device: D09}
+    client_facts: []
+    provenance: authored
+
+  - id: m10
+    prompt_half: false
+    intent_text: "Check if phone +9901000010 is within 2 km of 47.368, 8.530 in Zurich."
+    params:
+      device_id: D10
+      identifier: phone_number
+      area: {center: {latitude: 47.368, longitude: 8.530}, radius: 2000}
+    world_ref: {device: D10}
+    client_facts: []
+    provenance: authored
+
+  - id: m11
+    prompt_half: true
+    # D11 no known location -> UNABLE_TO_LOCATE; no maxAge
+    intent_text: "Is the device at 192.0.2.11 port 40011 within 2 km of 52.400, 13.000?"
+    params:
+      device_id: D11
+      identifier: ipv4_with_port
+      area: {center: {latitude: 52.400, longitude: 13.000}, radius: 2000}
+    world_ref: {device: D11}
+    client_facts: []
+    provenance: authored
+
+  - id: m12
+    prompt_half: false
+    intent_text: "Is the device with IPv6 2001:db8:a:c::1 within 2 km of 53.357, -6.266 in Dublin?"
+    params:
+      device_id: D12
+      identifier: ipv6
+      area: {center: {latitude: 53.357, longitude: -6.266}, radius: 2000}
+    world_ref: {device: D12}
+    client_facts: []
+    provenance: authored
+
+  - id: m13
+    prompt_half: true
+    intent_text: "Check if phone +9901000013 is within 2 km of 50.731, 7.112 in Bonn."
+    params:
+      device_id: D13
+      identifier: phone_number
+      area: {center: {latitude: 50.731, longitude: 7.112}, radius: 2000}
+    world_ref: {device: D13}
+    client_facts: []
+    provenance: authored
+
+  - id: m14
+    prompt_half: false
+    # D14: Berlin, acc 4000m; small requested area -> FALSE
+    intent_text: "Is the device at 192.0.2.14 port 40014 within 2 km of 52.524, 13.405 in Berlin?"
+    params:
+      device_id: D14
+      identifier: ipv4_with_port
+      area: {center: {latitude: 52.524, longitude: 13.405}, radius: 2000}
+    world_ref: {device: D14}
+    client_facts: []
+    provenance: authored
+
+  - id: m15
+    prompt_half: true
+    intent_text: "Is the device with IPv6 2001:db8:a:f::1 within 2 km of 50.067, 14.425 in Prague?"
+    params:
+      device_id: D15
+      identifier: ipv6
+      area: {center: {latitude: 50.067, longitude: 14.425}, radius: 2000}
+    world_ref: {device: D15}
+    client_facts: []
+    provenance: authored
+
+  - id: m16
+    prompt_half: false
+    intent_text: "Check if phone +9901000016 is within 2 km of 48.208, 16.379 in Vienna, using a fresh location reading."
+    params:
+      device_id: D16
+      identifier: phone_number
+      area: {center: {latitude: 48.208, longitude: 16.379}, radius: 2000}
+      max_age: 0
+    world_ref: {device: D16}
+    client_facts: []
+    provenance: authored
+
+  - id: m17
+    prompt_half: true
+    intent_text: "Is the device at 192.0.2.17 port 40017 within 2 km of 48.864, 2.346 in Paris?"
+    params:
+      device_id: D17
+      identifier: ipv4_with_port
+      area: {center: {latitude: 48.864, longitude: 2.346}, radius: 2000}
+    world_ref: {device: D17}
+    client_facts: []
+    provenance: authored
+
+  - id: m18
+    prompt_half: false
+    intent_text: "Is the device with IPv6 2001:db8:a:12::1 within 2 km of 40.412, -3.691 in Madrid?"
+    params:
+      device_id: D18
+      identifier: ipv6
+      area: {center: {latitude: 40.412, longitude: -3.691}, radius: 2000}
+    world_ref: {device: D18}
+    client_facts: []
+    provenance: authored
+
+  - id: m19
+    prompt_half: true
+    # D19 no known location -> UNABLE_TO_LOCATE
+    intent_text: "Is phone +9901000019 within 2 km of 51.000, 10.000?"
+    params:
+      device_id: D19
+      identifier: phone_number
+      area: {center: {latitude: 51.000, longitude: 10.000}, radius: 2000}
+    world_ref: {device: D19}
+    client_facts: []
+    provenance: authored
+
+  - id: m20
+    prompt_half: false
+    intent_text: "Is the device at 192.0.2.20 port 40020 within 2 km of 52.359, 4.892 in Amsterdam?"
+    params:
+      device_id: D20
+      identifier: ipv4_with_port
+      area: {center: {latitude: 52.359, longitude: 4.892}, radius: 2000}
+    world_ref: {device: D20}
+    client_facts: []
+    provenance: authored
+
+  - id: m21
+    prompt_half: true
+    intent_text: "Check if the device with IPv6 2001:db8:a:15::1 is within 2 km of 52.229, 21.018 in Warsaw."
+    params:
+      device_id: D21
+      identifier: ipv6
+      area: {center: {latitude: 52.229, longitude: 21.018}, radius: 2000}
+    world_ref: {device: D21}
+    client_facts: []
+    provenance: authored
+
+  - id: m22
+    prompt_half: false
+    intent_text: "Is phone +9901000022 within 2 km of 47.505, 19.034 in Budapest?"
+    params:
+      device_id: D22
+      identifier: phone_number
+      area: {center: {latitude: 47.505, longitude: 19.034}, radius: 2000}
+    world_ref: {device: D22}
+    client_facts: []
+    provenance: authored
+
+  - id: m23
+    prompt_half: true
+    # NAI-only: client facts include phone number for the server to ask about
+    intent_text: "Is the device of subscriber dev023@nlipeval.example within 2 km of 47.372, 8.553 in Zurich?"
+    params:
+      device_id: D23
+      identifier: network_access_identifier
+      area: {center: {latitude: 47.372, longitude: 8.553}, radius: 2000}
+    world_ref: {device: D23}
+    client_facts:
+      - {fact: "phone_number", value: "+9901000023"}
+    provenance: authored
+
+  - id: m24
+    prompt_half: false
+    intent_text: "Is the device at 192.0.2.24 port 40024 within 3 km of 38.726, -9.139 in Lisbon?"
+    params:
+      device_id: D24
+      identifier: ipv4_with_port
+      area: {center: {latitude: 38.726, longitude: -9.139}, radius: 3000}
+    world_ref: {device: D24}
+    client_facts: []
+    provenance: authored
+
+  - id: m25
+    prompt_half: true
+    intent_text: "Is the device with IPv6 2001:db8:a:19::1 within 2 km of 53.341, -6.272 in Dublin?"
+    params:
+      device_id: D25
+      identifier: ipv6
+      area: {center: {latitude: 53.341, longitude: -6.272}, radius: 2000}
+    world_ref: {device: D25}
+    client_facts: []
+    provenance: authored
+
+  - id: m26
+    prompt_half: false
+    intent_text: "Check if phone +9901000026 is within 2 km of 50.735, 7.106 in Bonn, using a location that is at most 5 minutes old."
+    params:
+      device_id: D26
+      identifier: phone_number
+      area: {center: {latitude: 50.735, longitude: 7.106}, radius: 2000}
+      max_age: 300
+    world_ref: {device: D26}
+    client_facts: []
+    provenance: authored
+
+  - id: m27
+    prompt_half: true
+    # D27 no known location -> UNABLE_TO_LOCATE; also with maxAge -> UNABLE_TO_FULFILL_MAX_AGE
+    intent_text: "Is the device at 192.0.2.27 port 40027 within 2 km of 51.500, 10.000, with a location no older than 1 hour?"
+    params:
+      device_id: D27
+      identifier: ipv4_with_port
+      area: {center: {latitude: 51.500, longitude: 10.000}, radius: 2000}
+      max_age: 3600
+    world_ref: {device: D27}
+    client_facts: []
+    provenance: authored
+
+  - id: m28
+    prompt_half: false
+    intent_text: "Is the device with IPv6 2001:db8:a:1c::1 within 2 km of 50.071, 14.449 in Prague?"
+    params:
+      device_id: D28
+      identifier: ipv6
+      area: {center: {latitude: 50.071, longitude: 14.449}, radius: 2000}
+    world_ref: {device: D28}
+    client_facts: []
+    provenance: authored
+
+  - id: m29
+    prompt_half: true
+    intent_text: "Check if phone +9901000029 is within 3 km of 48.212, 16.373 in Vienna."
+    params:
+      device_id: D29
+      identifier: phone_number
+      area: {center: {latitude: 48.212, longitude: 16.373}, radius: 3000}
+    world_ref: {device: D29}
+    client_facts: []
+    provenance: authored
+
+  - id: m30
+    prompt_half: false
+    intent_text: "Is the device at 192.0.2.30 port 40030 within 2 km of 48.848, 2.340 in Paris, using a fresh reading?"
+    params:
+      device_id: D30
+      identifier: ipv4_with_port
+      area: {center: {latitude: 48.848, longitude: 2.340}, radius: 2000}
+      max_age: 0
+      gold_max_age: 3600   # fact: a reading up to one hour old is acceptable
+    world_ref: {device: D30}
+    client_facts:
+      - {fact: "max_age_acceptable", value: "If a fresh reading is not possible, a reading up to one hour old is acceptable."}
+    provenance: authored
+
+pilot:
+  - id: p01
+    pilot_round: A
+    intent_text: "Is phone +9901000001 within 2 km of 52.520, 13.411 in Berlin?"
+    params:
+      device_id: D01
+      identifier: phone_number
+      area: {center: {latitude: 52.520, longitude: 13.411}, radius: 2000}
+    world_ref: {device: D01}
+    client_facts: []
+    provenance: authored
+
+  - id: p02
+    pilot_round: A
+    intent_text: "Is the device at 192.0.2.6 port 40006 within 2 km of 41.902, 12.502 in Rome?"
+    params:
+      device_id: D06
+      identifier: ipv4_with_port
+      area: {center: {latitude: 41.902, longitude: 12.502}, radius: 2000}
+    world_ref: {device: D06}
+    client_facts: []
+    provenance: authored
+
+  - id: p03
+    pilot_round: A
+    intent_text: "Is the device with IPv6 2001:db8:a:9::1 within 2 km of 47.501, 19.040 in Budapest?"
+    params:
+      device_id: D09
+      identifier: ipv6
+      area: {center: {latitude: 47.501, longitude: 19.040}, radius: 2000}
+    world_ref: {device: D09}
+    client_facts: []
+    provenance: authored
+
+  - id: p04
+    pilot_round: A
+    intent_text: "Check if phone +9901000016 is within 2 km of 48.208, 16.379 in Vienna."
+    params:
+      device_id: D16
+      identifier: phone_number
+      area: {center: {latitude: 48.208, longitude: 16.379}, radius: 2000}
+    world_ref: {device: D16}
+    client_facts: []
+    provenance: authored
+
+  - id: p05
+    pilot_round: A
+    intent_text: "Is the device at 192.0.2.21 port 40021 within 2 km of 52.229, 21.018 in Warsaw?"
+    params:
+      device_id: D21
+      identifier: ipv4_with_port
+      area: {center: {latitude: 52.229, longitude: 21.018}, radius: 2000}
+    world_ref: {device: D21}
+    client_facts: []
+    provenance: authored
+
+  - id: p06
+    pilot_round: B
+    intent_text: "Is the device with IPv6 2001:db8:a:c::1 within 2 km of 53.357, -6.266 in Dublin?"
+    params:
+      device_id: D12
+      identifier: ipv6
+      area: {center: {latitude: 53.357, longitude: -6.266}, radius: 2000}
+    world_ref: {device: D12}
+    client_facts: []
+    provenance: authored
+
+  - id: p07
+    pilot_round: B
+    intent_text: "Is phone +9901000026 within 2 km of 50.735, 7.106 in Bonn?"
+    params:
+      device_id: D26
+      identifier: phone_number
+      area: {center: {latitude: 50.735, longitude: 7.106}, radius: 2000}
+    world_ref: {device: D26}
+    client_facts: []
+    provenance: authored
+
+  - id: p08
+    pilot_round: B
+    intent_text: "Is the device at 192.0.2.17 port 40017 within 2 km of 48.864, 2.346 in Paris?"
+    params:
+      device_id: D17
+      identifier: ipv4_with_port
+      area: {center: {latitude: 48.864, longitude: 2.346}, radius: 2000}
+    world_ref: {device: D17}
+    client_facts: []
+    provenance: authored
+
+  - id: p09
+    pilot_round: B
+    intent_text: "Is the device with IPv6 2001:db8:a:19::1 within 2 km of 53.341, -6.272 in Dublin?"
+    params:
+      device_id: D25
+      identifier: ipv6
+      area: {center: {latitude: 53.341, longitude: -6.272}, radius: 2000}
+    world_ref: {device: D25}
+    client_facts: []
+    provenance: authored
+
+  - id: p10
+    pilot_round: B
+    intent_text: "Check if phone +9901000029 is within 3 km of 48.212, 16.373 in Vienna."
+    params:
+      device_id: D29
+      identifier: phone_number
+      area: {center: {latitude: 48.212, longitude: 16.373}, radius: 3000}
+    world_ref: {device: D29}
+    client_facts: []
+    provenance: authored

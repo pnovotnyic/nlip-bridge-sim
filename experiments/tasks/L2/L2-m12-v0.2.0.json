@@ -1,0 +1,114 @@
+{
+  "schema_version": "1",
+  "task_id": "L2-m12-v0.2.0",
+  "intent_id": "m12",
+  "pilot": false,
+  "api": "L2",
+  "operation": "verifyLocation",
+  "client_version": "v0.2.0",
+  "server_version": "v3.0.0",
+  "versions_behind": 3,
+  "breaking_crossed": 1,
+  "breaking_crossed_ops": 1,
+  "catalogue_breaking_crossed": 1,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Is the device with IPv6 2001:db8:a:c::1 within 2 km of 53.357, -6.266 in Dublin?",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/location-verification/v0/verify",
+    "body": {
+      "device": {
+        "ipv6Address": "2001:db8:a:c::1"
+      },
+      "area": {
+        "areaType": "CIRCLE",
+        "center": {
+          "latitude": 53.357,
+          "longitude": -6.266
+        },
+        "radius": 2000
+      }
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v0.2.0 response schema: verificationResult string enum, optional lastLocationTime and matchRate",
+    "type": "object",
+    "required": [
+      "verificationResult"
+    ],
+    "properties": {
+      "verificationResult": {
+        "type": "string",
+        "enum": [
+          true,
+          false,
+          "PARTIAL",
+          "UNKNOWN"
+        ]
+      },
+      "lastLocationTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "matchRate": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 99
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D12"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/location-verification/v3/verify",
+      "body": {
+        "device": {
+          "ipv6Address": "2001:db8:a:c::1"
+        },
+        "area": {
+          "areaType": "CIRCLE",
+          "center": {
+            "latitude": 53.357,
+            "longitude": -6.266
+          },
+          "radius": 2000
+        }
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 200,
+    "body": {
+      "verificationResult": "TRUE",
+      "lastLocationTime": "2026-12-01T11:59:15Z"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "verificationResult": "TRUE",
+      "lastLocationTime": "2026-12-01T11:59:15Z"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [],
+  "change_tags_response": [
+    "newly_required"
+  ],
+  "material_fields": [
+    "device",
+    "area.center.latitude",
+    "area.center.longitude",
+    "area.radius",
+    "maxAge"
+  ],
+  "provenance": "authored"
+}

@@ -1,0 +1,143 @@
+{
+  "schema_version": "1",
+  "task_id": "L2-m23-v1.0.0",
+  "intent_id": "m23",
+  "pilot": false,
+  "api": "L2",
+  "operation": "verifyLocation",
+  "client_version": "v1.0.0",
+  "server_version": "v3.0.0",
+  "versions_behind": 2,
+  "breaking_crossed": 1,
+  "breaking_crossed_ops": 1,
+  "catalogue_breaking_crossed": 1,
+  "prompt_half": true,
+  "pilot_round": null,
+  "intent_text": "Is the device of subscriber dev023@nlipeval.example within 2 km of 47.372, 8.553 in Zurich?",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/location-verification/v1/verify",
+    "body": {
+      "device": {
+        "networkAccessIdentifier": "dev023@nlipeval.example"
+      },
+      "area": {
+        "areaType": "CIRCLE",
+        "center": {
+          "latitude": 47.372,
+          "longitude": 8.553
+        },
+        "radius": 2000
+      }
+    }
+  },
+  "client_facts": [
+    {
+      "fact": "phone_number",
+      "value": "+9901000023"
+    }
+  ],
+  "client_answer_schema": {
+    "description": "v1.0.0 response schema: verificationResult string enum, optional lastLocationTime and matchRate",
+    "type": "object",
+    "required": [
+      "verificationResult"
+    ],
+    "properties": {
+      "verificationResult": {
+        "type": "string",
+        "enum": [
+          true,
+          false,
+          "PARTIAL",
+          "UNKNOWN"
+        ]
+      },
+      "lastLocationTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "matchRate": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 99
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D23"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/location-verification/v3/verify",
+      "body": {
+        "device": {
+          "phoneNumber": "+9901000023"
+        },
+        "area": {
+          "areaType": "CIRCLE",
+          "center": {
+            "latitude": 47.372,
+            "longitude": 8.553
+          },
+          "radius": 2000
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/location-verification/v3/verify",
+      "body": {
+        "device": {
+          "phoneNumber": "+9901000023",
+          "networkAccessIdentifier": "dev023@nlipeval.example"
+        },
+        "area": {
+          "areaType": "CIRCLE",
+          "center": {
+            "latitude": 47.372,
+            "longitude": 8.553
+          },
+          "radius": 2000
+        }
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 200,
+    "body": {
+      "verificationResult": "PARTIAL",
+      "lastLocationTime": "2026-11-30T12:00:00Z",
+      "matchRate": 64
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "verificationResult": "PARTIAL",
+      "lastLocationTime": "2026-11-30T12:00:00Z",
+      "matchRate": 64
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [
+    "device.phoneNumber"
+  ],
+  "missing_info_source": {
+    "device.phoneNumber": "fact"
+  },
+  "change_tags_request": [],
+  "change_tags_response": [
+    "newly_required"
+  ],
+  "material_fields": [
+    "device",
+    "area.center.latitude",
+    "area.center.longitude",
+    "area.radius",
+    "maxAge"
+  ],
+  "provenance": "authored"
+}

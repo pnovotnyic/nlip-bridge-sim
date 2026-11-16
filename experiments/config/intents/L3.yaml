@@ -1,0 +1,574 @@
+# L3 Quality-on-Demand intents (stage 05).
+# Server version: v1.1.0. Client versions used in Stage 3: v0.8.1, v0.9.0, v0.10.0, v0.11.0, v1.0.0.
+# 30 main intents (m01–m30) + 10 pilot intents (p01–p10).
+# prompt_half: true for odd-numbered main intents (m01, m03, ..., m29).
+# pilot_round: A for p01–p05; B for p06–p10.
+# Composition: 22 creates (m01–m22), 4 gets (m23–m26), 4 deletes (m27–m30).
+# World constraint: creates use devices D01–D30; gets/deletes use world sessions (D31–D40).
+# Profile names from v0.8.1: QOS_E, QOS_S, QOS_M, QOS_L (same in all versions).
+# Duration rules: QOS_E max 1800s, QOS_S max 86400s, QOS_M max 7200s, QOS_L max 14400s.
+# v0.8.1 native requests without duration default to 86400s, above QOS_E/QOS_M/QOS_L max.
+# NAI-only: at most 2 intents; both have a second identifier in client_facts.
+# Fact rules (07b A6): `client_facts` hold only what the client itself knows and the intent text does not say:
+#   - a second device identifier (NAI-only intents), or
+#   - a preference that decides between alternatives the client's interface allows.
+# A fact never states the world's state (no "cannot locate", "unreachable", "expired"), never names a server-only
+# field, and never quotes a profile or service limit. Every fact is consistent with the gold call.
+
+api: L3
+server_version: v1.1.0
+
+main:
+  # --- CREATES (m01–m22) ---
+
+  - id: m01
+    prompt_half: true
+    operation: createSession
+    intent_text: "Give the phone +9901000001 a stable low-latency connection to the game server at 198.51.100.20 for the next hour."
+    params:
+      device_id: D01
+      identifier: phone_number
+      application_server: {ipv4Address: "198.51.100.20"}
+      profile: QOS_E
+      duration_s: 3600
+      gold_profile: QOS_M   # QOS_E max is 1800s; gold call uses QOS_M which allows 1 hour
+    world_ref: {device: D01}
+    client_facts:
+      - {fact: "duration_preference", value: "If QOS_E cannot be given for the full hour, use QOS_M for the full time rather than a shorter session."}
+    provenance: authored
+
+  - id: m02
+    prompt_half: false
+    operation: createSession
+    intent_text: "Create a QoS session for the device at 192.0.2.2 port 40002 to the game server at 198.51.100.20 for 30 minutes using the low-latency profile."
+    params:
+      device_id: D02
+      identifier: ipv4_with_port
+      application_server: {ipv4Address: "198.51.100.20"}
+      profile: QOS_E
+      duration_s: 1800
+    world_ref: {device: D02}
+    client_facts: []
+    provenance: authored
+
+  - id: m03
+    prompt_half: true
+    operation: createSession
+    intent_text: "Set up a video call connection from the device with IPv6 2001:db8:a:3::1 to the conference server at 2001:db8:b::10 for 45 minutes."
+    params:
+      device_id: D03
+      identifier: ipv6
+      application_server: {ipv6Address: "2001:db8:b::10"}
+      profile: QOS_M
+      duration_s: 2700
+    world_ref: {device: D03}
+    client_facts: []
+    provenance: authored
+
+  - id: m04
+    prompt_half: false
+    operation: createSession
+    intent_text: "Give phone +9901000004 a balanced connection to the streaming server at 198.51.100.30/32 for 1 hour, using device port 8080."
+    params:
+      device_id: D04
+      identifier: phone_number
+      application_server: {ipv4Address: "198.51.100.30/32"}
+      profile: QOS_M
+      duration_s: 3600
+      device_ports: {ports: [8080]}
+    world_ref: {device: D04}
+    client_facts: []
+    provenance: authored
+
+  - id: m05
+    prompt_half: true
+    operation: createSession
+    intent_text: "Create a large-file transfer session for the device at 192.0.2.5 port 40005 to the content server at 198.51.100.40, server port 443, for 4 hours."
+    params:
+      device_id: D05
+      identifier: ipv4_with_port
+      application_server: {ipv4Address: "198.51.100.40"}
+      profile: QOS_L
+      duration_s: 14400
+      application_server_ports: {ports: [443]}
+    world_ref: {device: D05}
+    client_facts: []
+    provenance: authored
+
+  - id: m06
+    prompt_half: false
+    operation: createSession
+    intent_text: "Set up a messaging session for the device with IPv6 2001:db8:a:6::1 to the message broker at 198.51.100.50 for the next 24 hours."
+    params:
+      device_id: D06
+      identifier: ipv6
+      application_server: {ipv4Address: "198.51.100.50"}
+      profile: QOS_S
+      duration_s: 86400
+    world_ref: {device: D06}
+    client_facts: []
+    provenance: authored
+
+  - id: m07
+    prompt_half: true
+    operation: createSession
+    intent_text: "Give phone +9901000007 a low-latency session to the game server at 198.51.100.20 for 20 minutes, with notifications to https://app.example.org/notify/session."
+    params:
+      device_id: D07
+      identifier: phone_number
+      application_server: {ipv4Address: "198.51.100.20"}
+      profile: QOS_E
+      duration_s: 1200
+      sink: "https://app.example.org/notify/session"
+    world_ref: {device: D07}
+    client_facts: []
+    provenance: authored
+
+  - id: m08
+    prompt_half: false
+    operation: createSession
+    intent_text: "Create a video streaming session for the device at 192.0.2.8 port 40008 to the media server at 198.51.100.60, server ports 5000–5100, for 1.5 hours."
+    params:
+      device_id: D08
+      identifier: ipv4_with_port
+      application_server: {ipv4Address: "198.51.100.60"}
+      profile: QOS_M
+      duration_s: 5400
+      application_server_ports: {ranges: [{from: 5000, to: 5100}]}
+    world_ref: {device: D08}
+    client_facts: []
+    provenance: authored
+
+  - id: m09
+    prompt_half: true
+    operation: createSession
+    intent_text: "Set up a low-latency connection for the device with IPv6 2001:db8:a:9::1 to the application server at 2001:db8:b::/64 for 25 minutes."
+    params:
+      device_id: D09
+      identifier: ipv6
+      application_server: {ipv6Address: "2001:db8:b::/64"}
+      profile: QOS_E
+      duration_s: 1500
+    world_ref: {device: D09}
+    client_facts: []
+    provenance: authored
+
+  - id: m10
+    prompt_half: false
+    operation: createSession
+    intent_text: "Give phone +9901000010 a large-data transfer connection to the backup server at 198.51.100.70 for 2 hours, with status notifications to https://app.example.org/notify/data."
+    params:
+      device_id: D10
+      identifier: phone_number
+      application_server: {ipv4Address: "198.51.100.70"}
+      profile: QOS_L
+      duration_s: 7200
+      sink: "https://app.example.org/notify/data"
+    world_ref: {device: D10}
+    client_facts: []
+    provenance: authored
+
+  - id: m11
+    prompt_half: true
+    operation: createSession
+    # gold call uses QOS_M by the client's fact (QOS_E max is 1800 s)
+    intent_text: "Create a 2-hour low-latency session for the device at 192.0.2.11 port 40011 to the game server at 198.51.100.20."
+    params:
+      device_id: D11
+      identifier: ipv4_with_port
+      application_server: {ipv4Address: "198.51.100.20"}
+      profile: QOS_E
+      duration_s: 7200
+      gold_profile: QOS_M   # QOS_E max is 1800s; gold call uses QOS_M which allows 2 hours exactly
+    world_ref: {device: D11}
+    client_facts:
+      - {fact: "duration_preference", value: "If QOS_E cannot be given for the full two hours, use QOS_M for the full time rather than a shorter session."}
+    provenance: authored
+
+  - id: m12
+    prompt_half: false
+    operation: createSession
+    intent_text: "Set up a telemetry session for the device with IPv6 2001:db8:a:c::1 to the telemetry server at 198.51.100.0/24 for 12 hours, with event notifications to https://app.example.org/notify/telemetry."
+    params:
+      device_id: D12
+      identifier: ipv6
+      application_server: {ipv4Address: "198.51.100.0/24"}
+      profile: QOS_S
+      duration_s: 43200
+      sink: "https://app.example.org/notify/telemetry"
+    world_ref: {device: D12}
+    client_facts: []
+    provenance: authored
+
+  - id: m13
+    prompt_half: true
+    operation: createSession
+    intent_text: "Give phone +9901000013 a video call connection to the conference server at 2001:db8:b::10 for 1 hour, with device ports 5060 and 5061."
+    params:
+      device_id: D13
+      identifier: phone_number
+      application_server: {ipv6Address: "2001:db8:b::10"}
+      profile: QOS_M
+      duration_s: 3600
+      device_ports: {ports: [5060, 5061]}
+    world_ref: {device: D13}
+    client_facts: []
+    provenance: authored
+
+  - id: m14
+    prompt_half: false
+    operation: createSession
+    intent_text: "Create a high-throughput file transfer session for the device at 192.0.2.14 port 40014 to the CDN at 198.51.100.40, server port 443, for 3 hours."
+    params:
+      device_id: D14
+      identifier: ipv4_with_port
+      application_server: {ipv4Address: "198.51.100.40"}
+      profile: QOS_L
+      duration_s: 10800
+      application_server_ports: {ports: [443]}
+    world_ref: {device: D14}
+    client_facts: []
+    provenance: authored
+
+  - id: m15
+    prompt_half: true
+    operation: createSession
+    intent_text: "Set up a 6-hour IoT telemetry session for the device with IPv6 2001:db8:a:f::1 to the platform at 198.51.100.50, with status updates to https://app.example.org/notify/iot."
+    params:
+      device_id: D15
+      identifier: ipv6
+      application_server: {ipv4Address: "198.51.100.50"}
+      profile: QOS_S
+      duration_s: 21600
+      sink: "https://app.example.org/notify/iot"
+    world_ref: {device: D15}
+    client_facts: []
+    provenance: authored
+
+  - id: m16
+    prompt_half: false
+    operation: createSession
+    # NAI-only: client knows only the NAI; facts give phone number for server to request
+    intent_text: "Create a low-latency gaming session for the subscriber dev016@nlipeval.example to the game server at 198.51.100.20 for 15 minutes."
+    params:
+      device_id: D16
+      identifier: network_access_identifier
+      application_server: {ipv4Address: "198.51.100.20"}
+      profile: QOS_E
+      duration_s: 900
+    world_ref: {device: D16}
+    client_facts:
+      - {fact: "phone_number", value: "+9901000016"}
+    provenance: authored
+
+  - id: m17
+    prompt_half: true
+    operation: createSession
+    intent_text: "Give phone +9901000017 a streaming session to the media server at 198.51.100.60 for 90 minutes, with application server ports 5000–5100 and notifications to https://app.example.org/notify/stream."
+    params:
+      device_id: D17
+      identifier: phone_number
+      application_server: {ipv4Address: "198.51.100.60"}
+      profile: QOS_M
+      duration_s: 5400
+      application_server_ports: {ranges: [{from: 5000, to: 5100}]}
+      sink: "https://app.example.org/notify/stream"
+    world_ref: {device: D17}
+    client_facts: []
+    provenance: authored
+
+  - id: m18
+    prompt_half: false
+    operation: createSession
+    intent_text: "Create a large-data transfer session for the device at 192.0.2.18 port 40018 to the archive server at 198.51.100.70 for 4 hours, with notifications to https://app.example.org/notify/archive."
+    params:
+      device_id: D18
+      identifier: ipv4_with_port
+      application_server: {ipv4Address: "198.51.100.70"}
+      profile: QOS_L
+      duration_s: 14400
+      sink: "https://app.example.org/notify/archive"
+    world_ref: {device: D18}
+    client_facts: []
+    provenance: authored
+
+  - id: m19
+    prompt_half: true
+    operation: createSession
+    intent_text: "Set up a low-latency gaming session for the device with IPv6 2001:db8:a:13::1 to 198.51.100.20 for 10 minutes, with notifications to https://app.example.org/notify/game."
+    params:
+      device_id: D19
+      identifier: ipv6
+      application_server: {ipv4Address: "198.51.100.20"}
+      profile: QOS_E
+      duration_s: 600
+      sink: "https://app.example.org/notify/game"
+    world_ref: {device: D19}
+    client_facts: []
+    provenance: authored
+
+  - id: m20
+    prompt_half: false
+    operation: createSession
+    intent_text: "Give phone +9901000020 a balanced video-call session to the conference server at 2001:db8:b::10 for 2 hours, with QoS notifications to https://app.example.org/notify/video."
+    params:
+      device_id: D20
+      identifier: phone_number
+      application_server: {ipv6Address: "2001:db8:b::10"}
+      profile: QOS_M
+      duration_s: 7200
+      sink: "https://app.example.org/notify/video"
+    world_ref: {device: D20}
+    client_facts: []
+    provenance: authored
+
+  - id: m21
+    prompt_half: true
+    operation: createSession
+    # NAI-only: client facts include IPv6 address for server to ask
+    intent_text: "Create a messaging session for the subscriber dev021@nlipeval.example to the broker at 198.51.100.50 for 8 hours."
+    params:
+      device_id: D21
+      identifier: network_access_identifier
+      application_server: {ipv4Address: "198.51.100.50"}
+      profile: QOS_S
+      duration_s: 28800
+    world_ref: {device: D21}
+    client_facts:
+      - {fact: "ipv6_address", value: "2001:db8:a:15::1"}
+    provenance: authored
+
+  - id: m22
+    prompt_half: false
+    operation: createSession
+    intent_text: "Set up a low-latency connection from the device at 192.0.2.22 port 40022 to the realtime server at 198.51.100.30/32 for 20 minutes."
+    params:
+      device_id: D22
+      identifier: ipv4_with_port
+      application_server: {ipv4Address: "198.51.100.30/32"}
+      profile: QOS_E
+      duration_s: 1200
+    world_ref: {device: D22}
+    client_facts: []
+    provenance: authored
+
+  # --- GETS (m23–m26) --- sessions on D31–D40
+
+  - id: m23
+    prompt_half: true
+    operation: getSession
+    intent_text: "Get the details of session a1b2c3d4-0001-4000-8000-000000000001."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000001"
+      device_id: D31
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000001", device: D31}
+    client_facts: []
+    provenance: authored
+
+  - id: m24
+    prompt_half: false
+    operation: getSession
+    intent_text: "Show me the current status of QoS session a1b2c3d4-0001-4000-8000-000000000003."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000003"
+      device_id: D33
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000003", device: D33}
+    client_facts: []
+    provenance: authored
+
+  - id: m25
+    prompt_half: true
+    operation: getSession
+    intent_text: "Retrieve the details for session a1b2c3d4-0001-4000-8000-000000000005."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000005"
+      device_id: D35
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000005", device: D35}
+    client_facts: []
+    provenance: authored
+
+  - id: m26
+    prompt_half: false
+    operation: getSession
+    intent_text: "What is the status of the QoS session with ID a1b2c3d4-0001-4000-8000-000000000008?"
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000008"
+      device_id: D38
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000008", device: D38}
+    client_facts: []
+    provenance: authored
+
+  # --- DELETES (m27–m30) --- sessions on D31–D40
+
+  - id: m27
+    prompt_half: true
+    operation: deleteSession
+    intent_text: "Delete the QoS session a1b2c3d4-0001-4000-8000-000000000002."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000002"
+      device_id: D32
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000002", device: D32}
+    client_facts: []
+    provenance: authored
+
+  - id: m28
+    prompt_half: false
+    operation: deleteSession
+    intent_text: "Cancel and remove the QoS session a1b2c3d4-0001-4000-8000-000000000004."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000004"
+      device_id: D34
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000004", device: D34}
+    client_facts: []
+    provenance: authored
+
+  - id: m29
+    prompt_half: true
+    operation: deleteSession
+    intent_text: "Terminate and delete session a1b2c3d4-0001-4000-8000-000000000006."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000006"
+      device_id: D36
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000006", device: D36}
+    client_facts: []
+    provenance: authored
+
+  - id: m30
+    prompt_half: false
+    operation: deleteSession
+    intent_text: "Remove the QoS session with ID a1b2c3d4-0001-4000-8000-000000000007."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000007"
+      device_id: D37
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000007", device: D37}
+    client_facts: []
+    provenance: authored
+
+pilot:
+  - id: p01
+    pilot_round: A
+    operation: createSession
+    intent_text: "Give phone +9901000001 a stable low-latency connection to 198.51.100.20 for 20 minutes."
+    params:
+      device_id: D01
+      identifier: phone_number
+      application_server: {ipv4Address: "198.51.100.20"}
+      profile: QOS_E
+      duration_s: 1200
+    world_ref: {device: D01}
+    client_facts: []
+    provenance: authored
+
+  - id: p02
+    pilot_round: A
+    operation: createSession
+    intent_text: "Create a 2-hour streaming session for the device at 192.0.2.6 port 40006 to 198.51.100.60."
+    params:
+      device_id: D06
+      identifier: ipv4_with_port
+      application_server: {ipv4Address: "198.51.100.60"}
+      profile: QOS_M
+      duration_s: 7200
+    world_ref: {device: D06}
+    client_facts: []
+    provenance: authored
+
+  - id: p03
+    pilot_round: A
+    operation: getSession
+    intent_text: "Get the details of session a1b2c3d4-0001-4000-8000-000000000001."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000001"
+      device_id: D31
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000001", device: D31}
+    client_facts: []
+    provenance: authored
+
+  - id: p04
+    pilot_round: A
+    operation: deleteSession
+    intent_text: "Delete QoS session a1b2c3d4-0001-4000-8000-000000000002."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000002"
+      device_id: D32
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000002", device: D32}
+    client_facts: []
+    provenance: authored
+
+  - id: p05
+    pilot_round: A
+    operation: createSession
+    intent_text: "Set up a 12-hour IoT telemetry session for the device with IPv6 2001:db8:a:9::1 to 198.51.100.50."
+    params:
+      device_id: D09
+      identifier: ipv6
+      application_server: {ipv4Address: "198.51.100.50"}
+      profile: QOS_S
+      duration_s: 43200
+    world_ref: {device: D09}
+    client_facts: []
+    provenance: authored
+
+  - id: p06
+    pilot_round: B
+    operation: createSession
+    intent_text: "Give phone +9901000016 a 15-minute low-latency gaming session to the game server at 198.51.100.20."
+    params:
+      device_id: D16
+      identifier: phone_number
+      application_server: {ipv4Address: "198.51.100.20"}
+      profile: QOS_E
+      duration_s: 900
+    world_ref: {device: D16}
+    client_facts: []
+    provenance: authored
+
+  - id: p07
+    pilot_round: B
+    operation: createSession
+    intent_text: "Create a 3-hour file transfer session for the device at 192.0.2.17 port 40017 to 198.51.100.70."
+    params:
+      device_id: D17
+      identifier: ipv4_with_port
+      application_server: {ipv4Address: "198.51.100.70"}
+      profile: QOS_L
+      duration_s: 10800
+    world_ref: {device: D17}
+    client_facts: []
+    provenance: authored
+
+  - id: p08
+    pilot_round: B
+    operation: getSession
+    intent_text: "Show me the status of QoS session a1b2c3d4-0001-4000-8000-000000000003."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000003"
+      device_id: D33
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000003", device: D33}
+    client_facts: []
+    provenance: authored
+
+  - id: p09
+    pilot_round: B
+    operation: deleteSession
+    intent_text: "Remove QoS session a1b2c3d4-0001-4000-8000-000000000004."
+    params:
+      session_id: "a1b2c3d4-0001-4000-8000-000000000004"
+      device_id: D34
+    world_ref: {session: "a1b2c3d4-0001-4000-8000-000000000004", device: D34}
+    client_facts: []
+    provenance: authored
+
+  - id: p10
+    pilot_round: B
+    operation: createSession
+    intent_text: "Set up a 2-hour video call session for the device with IPv6 2001:db8:a:1b::1 to 2001:db8:b::10."
+    params:
+      device_id: D27
+      identifier: ipv6
+      application_server: {ipv6Address: "2001:db8:b::10"}
+      profile: QOS_M
+      duration_s: 7200
+    world_ref: {device: D27}
+    client_facts: []
+    provenance: authored

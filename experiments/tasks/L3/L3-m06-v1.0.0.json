@@ -1,0 +1,140 @@
+{
+  "schema_version": "1",
+  "task_id": "L3-m06-v1.0.0",
+  "intent_id": "m06",
+  "pilot": false,
+  "api": "L3",
+  "operation": "createSession",
+  "client_version": "v1.0.0",
+  "server_version": "v1.1.0",
+  "versions_behind": 1,
+  "breaking_crossed": 0,
+  "breaking_crossed_ops": 0,
+  "catalogue_breaking_crossed": 0,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Set up a messaging session for the device with IPv6 2001:db8:a:6::1 to the message broker at 198.51.100.50 for the next 24 hours.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/quality-on-demand/v1/sessions",
+    "body": {
+      "duration": 86400,
+      "device": {
+        "ipv6Address": "2001:db8:a:6::1"
+      },
+      "applicationServer": {
+        "ipv4Address": "198.51.100.50"
+      },
+      "qosProfile": "QOS_S"
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v1.0.0 createSession: same as v0.11.0",
+    "type": "object",
+    "required": [
+      "sessionId",
+      "duration",
+      "qosStatus"
+    ],
+    "properties": {
+      "sessionId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "startedAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "expiresAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "device": {
+        "type": "object"
+      },
+      "applicationServer": {
+        "type": "object"
+      },
+      "qosProfile": {
+        "type": "string"
+      },
+      "qosStatus": {
+        "type": "string",
+        "enum": [
+          "REQUESTED",
+          "AVAILABLE",
+          "UNAVAILABLE"
+        ]
+      },
+      "statusInfo": {
+        "type": "string"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D06"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/quality-on-demand/v1/sessions",
+      "body": {
+        "duration": 86400,
+        "device": {
+          "ipv6Address": "2001:db8:a:6::1"
+        },
+        "applicationServer": {
+          "ipv4Address": "198.51.100.50"
+        },
+        "qosProfile": "QOS_S"
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 201,
+    "body": {
+      "applicationServer": {
+        "ipv4Address": "198.51.100.50"
+      },
+      "qosProfile": "QOS_S",
+      "sessionId": "dc5ac203-11f0-5f4a-a00e-1753687b6845",
+      "duration": 86400,
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-02T12:00:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "duration": 86400,
+      "applicationServer": {
+        "ipv4Address": "198.51.100.50"
+      },
+      "qosProfile": "QOS_S",
+      "sessionId": "dc5ac203-11f0-5f4a-a00e-1753687b6845",
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-02T12:00:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [],
+  "change_tags_response": [],
+  "material_fields": [
+    "operation",
+    "sessionId",
+    "device",
+    "applicationServer",
+    "qosProfile",
+    "duration"
+  ],
+  "provenance": "authored"
+}

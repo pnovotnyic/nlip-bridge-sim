@@ -1,0 +1,36 @@
+# World: QoS profiles served by the L3 backend (stage 04).
+# This file is the single source for the backend AND for the profile table in the L3 server prompt
+# (nlipeval/backends/profile_table.py). Names follow the QoD v1.1.0 text (QOS_E, QOS_S, QOS_M, QOS_L).
+# status: ACTIVE | INACTIVE | DEPRECATED  (QoS Profiles v1.1.0, QosProfileStatusEnum)
+# Durations are in seconds. A create request must satisfy min_duration_s <= duration <= max_duration_s.
+profiles:
+  - name: QOS_E
+    status: ACTIVE
+    min_duration_s: 60
+    max_duration_s: 1800        # 30 minutes: tasks that ask for an hour exceed it
+    description: "stable low latency for real-time traffic such as gaming and voice"
+  - name: QOS_S
+    status: ACTIVE
+    min_duration_s: 60
+    max_duration_s: 86400       # 24 hours
+    description: "light traffic with modest latency needs, such as messaging and telemetry"
+  - name: QOS_M
+    status: ACTIVE
+    min_duration_s: 60
+    max_duration_s: 7200        # 2 hours
+    description: "balanced latency and throughput for video calls and streaming"
+  - name: QOS_L
+    status: ACTIVE
+    min_duration_s: 300
+    max_duration_s: 14400       # 4 hours
+    description: "high throughput for large transfers and live video production"
+  - name: QOS_XL
+    status: INACTIVE
+    min_duration_s: 300
+    max_duration_s: 14400
+    description: "very high throughput for bulk uploads; not currently offered"
+  - name: voice
+    status: DEPRECATED
+    min_duration_s: 60
+    max_duration_s: 3600
+    description: "legacy voice profile; existing sessions continue, new sessions are refused"

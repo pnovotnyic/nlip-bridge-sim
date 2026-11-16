@@ -1,0 +1,98 @@
+{
+  "schema_version": "1",
+  "task_id": "L1-m24-v0.6.0",
+  "intent_id": "m24",
+  "pilot": false,
+  "api": "L1",
+  "operation": "retrieveReachability",
+  "client_version": "v0.6.0",
+  "server_version": "v1.0.0",
+  "versions_behind": 1,
+  "breaking_crossed": 2,
+  "breaking_crossed_ops": 2,
+  "catalogue_breaking_crossed": 2,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Is the device at 192.0.2.24 port 40024 currently accessible on the network?",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/device-reachability-status/v0.6/retrieve",
+    "body": {
+      "device": {
+        "ipv4Address": {
+          "publicAddress": "192.0.2.24",
+          "publicPort": 40024
+        }
+      }
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v0.6.0 response schema: reachabilityStatus enum, lastStatusTime optional",
+    "type": "object",
+    "required": [
+      "reachabilityStatus"
+    ],
+    "properties": {
+      "reachabilityStatus": {
+        "type": "string",
+        "enum": [
+          "CONNECTED_DATA",
+          "CONNECTED_SMS",
+          "NOT_CONNECTED"
+        ]
+      },
+      "lastStatusTime": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D24"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/device-reachability-status/v1/retrieve",
+      "body": {
+        "device": {
+          "ipv4Address": {
+            "publicAddress": "192.0.2.24",
+            "publicPort": 40024
+          }
+        }
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 200,
+    "body": {
+      "lastStatusTime": "2026-12-01T11:30:00Z",
+      "reachable": true,
+      "connectivity": [
+        "DATA",
+        "SMS"
+      ]
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "reachabilityStatus": "CONNECTED_DATA",
+      "lastStatusTime": "2026-12-01T11:30:00Z"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [],
+  "change_tags_response": [
+    "restructured"
+  ],
+  "material_fields": [
+    "device"
+  ],
+  "provenance": "authored"
+}

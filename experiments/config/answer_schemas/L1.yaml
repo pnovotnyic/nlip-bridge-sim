@@ -1,0 +1,48 @@
+# Answer schemas for L1 Device Reachability Status.
+# These define the fields a client of each version reads from the response.
+# Used to validate the client_answer_schema in task instances.
+
+api: L1
+server_version: v1.0.0
+operation: retrieveReachabilityStatus
+
+schemas:
+  v0.5.1:
+    # Stage 05 note: v0.5.1 response had connectivityStatus enum (CONNECTED_DATA/CONNECTED_SMS/NOT_CONNECTED)
+    description: "v0.5.1 response schema: connectivityStatus enum"
+    type: object
+    required: [connectivityStatus]
+    properties:
+      connectivityStatus:
+        type: string
+        enum: [CONNECTED_DATA, CONNECTED_SMS, NOT_CONNECTED]
+
+  v0.6.0:
+    # Stage 05 note: v0.6.0 response had reachabilityStatus enum
+    description: "v0.6.0 response schema: reachabilityStatus enum, lastStatusTime optional"
+    type: object
+    required: [reachabilityStatus]
+    properties:
+      reachabilityStatus:
+        type: string
+        enum: [CONNECTED_DATA, CONNECTED_SMS, NOT_CONNECTED]
+      lastStatusTime:
+        type: string
+        format: date-time
+
+  v1.0.0:
+    # Stage 05 note: v1.0.0 response has reachable boolean + optional connectivity list
+    description: "v1.0.0 response schema: reachable boolean, connectivity list, lastStatusTime"
+    type: object
+    required: [reachable]
+    properties:
+      reachable:
+        type: boolean
+      connectivity:
+        type: array
+        items:
+          type: string
+          enum: [DATA, SMS]
+      lastStatusTime:
+        type: string
+        format: date-time

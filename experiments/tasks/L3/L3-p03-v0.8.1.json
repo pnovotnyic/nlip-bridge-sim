@@ -1,0 +1,126 @@
+{
+  "schema_version": "1",
+  "task_id": "L3-p03-v0.8.1",
+  "intent_id": "p03",
+  "pilot": true,
+  "api": "L3",
+  "operation": "getSession",
+  "client_version": "v0.8.1",
+  "server_version": "v1.1.0",
+  "versions_behind": 5,
+  "breaking_crossed": 21,
+  "breaking_crossed_ops": 14,
+  "catalogue_breaking_crossed": 8,
+  "prompt_half": false,
+  "pilot_round": "A",
+  "intent_text": "Get the details of session a1b2c3d4-0001-4000-8000-000000000001.",
+  "client_native_request": {
+    "method": "GET",
+    "path": "/qod/v0/sessions/a1b2c3d4-0001-4000-8000-000000000001",
+    "body": null
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v0.8.1 getSession response: same as createSession response",
+    "type": "object",
+    "required": [
+      "id",
+      "startedAt",
+      "expiresAt"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "startedAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "expiresAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "ueId": {
+        "type": "object"
+      },
+      "asId": {
+        "type": "object"
+      },
+      "qos": {
+        "type": "string"
+      }
+    }
+  },
+  "world_ref": {
+    "session": "a1b2c3d4-0001-4000-8000-000000000001",
+    "device": "D31"
+  },
+  "gold_calls": [
+    {
+      "method": "GET",
+      "path": "/quality-on-demand/v1/sessions/a1b2c3d4-0001-4000-8000-000000000001",
+      "body": null
+    }
+  ],
+  "gold_backend_response": {
+    "status": 200,
+    "body": {
+      "applicationServer": {
+        "ipv4Address": "198.51.100.10"
+      },
+      "devicePorts": {
+        "ports": [
+          5060
+        ]
+      },
+      "qosProfile": "QOS_E",
+      "sink": "https://app.example.org/notify/1",
+      "sessionId": "a1b2c3d4-0001-4000-8000-000000000001",
+      "duration": 1800,
+      "startedAt": "2026-12-01T11:55:00Z",
+      "expiresAt": "2026-12-01T12:25:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "duration": 1800,
+      "asId": {
+        "ipv4addr": "198.51.100.10"
+      },
+      "uePorts": {
+        "ports": [
+          5060
+        ]
+      },
+      "qos": "QOS_E",
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "startedAt": 1796126100,
+      "expiresAt": 1796127900
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [],
+  "change_tags_response": [
+    "renamed",
+    "unit_format",
+    "newly_required"
+  ],
+  "material_fields": [
+    "operation",
+    "sessionId",
+    "device",
+    "applicationServer",
+    "qosProfile",
+    "duration"
+  ],
+  "provenance": "authored"
+}

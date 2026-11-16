@@ -1,0 +1,105 @@
+# One entry per rung. Fixed from stage 01 onward; changes need a note in reports/.
+# `params` holds only what is sent to the model. `extra_body` is sent as-is in the request body.
+# `structured_output_mode` is filled in by the smoke tests (stage 01, step 6).
+rungs:
+  R1:
+    provider: ollama
+    enabled_in_main_runs: true
+    model: nlip-qwen3-4b            # derived from qwen3:4b with num_ctx 65536 (config/Modelfile.qwen3-4b-nlip)
+    base_model: qwen3:4b
+    base_model_digest: 359d7dd4bcda
+    base_url_env: OLLAMA_BASE_URL
+    api_key_env: null               # Ollama needs no key; a dummy is sent
+    headers: {}
+    params:
+      temperature: 0.6              # Qwen3 model-card defaults for thinking mode
+      top_p: 0.95
+      seed: 0
+    extra_body: {}
+    thinking: default_on            # as served; not switched off
+    system_role_supported: true
+    structured_output_mode: json_schema   # 5/5 valid in smoke test 3
+    max_concurrency: 1                # stage 04b: concurrency 2 gave no throughput gain
+    timeout_s: 600
+    session_limit_s: 3600             # wall-time limit per session (07b B9); a timeout is re-run once at twice this
+    context_tokens: 65536
+    serving:                          # environment variables Ollama must be started with (README.md)
+      OLLAMA_FLASH_ATTENTION: "1"
+      OLLAMA_KV_CACHE_TYPE: q8_0
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_KEEP_ALIVE: "-1"
+  R2:
+    provider: rits
+    enabled_in_main_runs: true
+    model: google/gemma-4-12B-it
+    base_url_env: RITS_BASE_URL_GEMMA
+    api_key_env: RITS_API_KEY
+    headers: {RITS_API_KEY: "${RITS_API_KEY}"}   # RITS rejects "Authorization: Bearer" (403)
+    params:
+      temperature: 1.0              # Gemma model-card default
+      top_p: 0.95
+      seed: 0
+    extra_body: {}
+    thinking: not_applicable
+    system_role_supported: true
+    structured_output_mode: json_schema   # 5/5 valid in smoke test 3
+    max_concurrency: 8
+    timeout_s: 300
+    session_limit_s: 1200
+    context_tokens: 131072
+  R3:
+    provider: rits
+    enabled_in_main_runs: true
+    model: openai/gpt-oss-20b
+    base_url_env: RITS_BASE_URL_GPTOSS
+    api_key_env: RITS_API_KEY
+    headers: {RITS_API_KEY: "${RITS_API_KEY}"}
+    params:
+      temperature: 1.0              # gpt-oss recommended
+      top_p: 1.0
+      seed: 0
+    extra_body: {reasoning_effort: medium}   # fixed at medium (plan, step 7)
+    thinking: reasoning_effort_medium
+    system_role_supported: true
+    structured_output_mode: json_schema   # 5/5 valid in smoke test 3
+    max_concurrency: 8
+    timeout_s: 300
+    session_limit_s: 1200
+    context_tokens: 131072
+  R4:
+    provider: rits
+    enabled_in_main_runs: true
+    model: deepseek-ai/DeepSeek-V3.2
+    base_url_env: RITS_BASE_URL_DEEPSEEK
+    api_key_env: RITS_API_KEY
+    headers: {RITS_API_KEY: "${RITS_API_KEY}"}
+    params:
+      temperature: 1.0              # DeepSeek-V3.2 recommended
+      top_p: 0.95
+      seed: 0
+    extra_body: {}
+    thinking: default_as_served     # replies showed "reasoning": null
+    system_role_supported: true
+    structured_output_mode: json_schema   # 5/5 valid in smoke test 3
+    max_concurrency: 8
+    timeout_s: 300
+    session_limit_s: 1200
+    context_tokens: 163840
+  R5:
+    provider: litellm
+    model: aws/claude-opus-5-5
+    base_url_env: LITELLM_BASE_URL
+    api_key_env: LITELLM_API_KEY
+    headers: {}
+    params: {}                      # NO temperature/top_p/top_k: the model rejects them (plan, step 7)
+    extra_body: {reasoning_effort: medium}   # accepted by the LiteLLM proxy; effect small (see report)
+    thinking: effort_medium
+    effort_note: "medium: the model's default; whether the proxy forwards reasoning_effort is unverified"
+    enabled_in_main_runs: false       # stage 03b: R5 runs in stage 14 only; no matrix before then may include it
+    system_role_supported: true
+    structured_output_mode: json_schema   # 5/5 valid in smoke test 3
+    max_concurrency: 4
+    timeout_s: 300
+    session_limit_s: 1200
+    context_tokens: 200000
+    price_usd_per_million: {input: 4.0, output: 20.0}   # list price

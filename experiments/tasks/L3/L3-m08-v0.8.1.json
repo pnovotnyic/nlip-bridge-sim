@@ -1,0 +1,176 @@
+{
+  "schema_version": "1",
+  "task_id": "L3-m08-v0.8.1",
+  "intent_id": "m08",
+  "pilot": false,
+  "api": "L3",
+  "operation": "createSession",
+  "client_version": "v0.8.1",
+  "server_version": "v1.1.0",
+  "versions_behind": 5,
+  "breaking_crossed": 21,
+  "breaking_crossed_ops": 14,
+  "catalogue_breaking_crossed": 18,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Create a video streaming session for the device at 192.0.2.8 port 40008 to the media server at 198.51.100.60, server ports 5000–5100, for 1.5 hours.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/qod/v0/sessions",
+    "body": {
+      "duration": 5400,
+      "ueId": {
+        "ipv4addr": "192.0.2.8"
+      },
+      "asId": {
+        "ipv4addr": "198.51.100.60"
+      },
+      "asPorts": {
+        "ranges": [
+          {
+            "from": 5000,
+            "to": 5100
+          }
+        ]
+      },
+      "qos": "QOS_M"
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v0.8.1 createSession response: id (UUID), startedAt/expiresAt Unix int, ueId, asId, qos, [duration]",
+    "type": "object",
+    "required": [
+      "id",
+      "startedAt",
+      "expiresAt"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "startedAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "expiresAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "ueId": {
+        "type": "object"
+      },
+      "asId": {
+        "type": "object"
+      },
+      "qos": {
+        "type": "string"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D08"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/quality-on-demand/v1/sessions",
+      "body": {
+        "duration": 5400,
+        "device": {
+          "ipv4Address": {
+            "publicAddress": "192.0.2.8",
+            "publicPort": 40008
+          }
+        },
+        "applicationServer": {
+          "ipv4Address": "198.51.100.60"
+        },
+        "applicationServerPorts": {
+          "ranges": [
+            {
+              "from": 5000,
+              "to": 5100
+            }
+          ]
+        },
+        "qosProfile": "QOS_M"
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 201,
+    "body": {
+      "applicationServer": {
+        "ipv4Address": "198.51.100.60"
+      },
+      "applicationServerPorts": {
+        "ranges": [
+          {
+            "from": 5000,
+            "to": 5100
+          }
+        ]
+      },
+      "qosProfile": "QOS_M",
+      "sessionId": "f5112312-af20-5a9a-b275-57c3bb9d7b93",
+      "duration": 5400,
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T13:30:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "duration": 5400,
+      "asId": {
+        "ipv4addr": "198.51.100.60"
+      },
+      "asPorts": {
+        "ranges": [
+          {
+            "from": 5000,
+            "to": 5100
+          }
+        ]
+      },
+      "qos": "QOS_M",
+      "id": "f5112312-af20-5a9a-b275-57c3bb9d7b93",
+      "startedAt": 1796126400,
+      "expiresAt": 1796131800
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [
+    "device.ipv4Address.publicPort"
+  ],
+  "missing_info_source": {
+    "device.ipv4Address.publicPort": "intent_text"
+  },
+  "change_tags_request": [
+    "renamed",
+    "restructured",
+    "unit_format",
+    "newly_required"
+  ],
+  "change_tags_response": [
+    "renamed",
+    "unit_format",
+    "newly_required"
+  ],
+  "material_fields": [
+    "operation",
+    "sessionId",
+    "device",
+    "applicationServer",
+    "qosProfile",
+    "duration"
+  ],
+  "provenance": "authored"
+}

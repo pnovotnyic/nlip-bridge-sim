@@ -1,0 +1,105 @@
+{
+  "schema_version": "1",
+  "task_id": "L1-m30-v0.5.1",
+  "intent_id": "m30",
+  "pilot": false,
+  "api": "L1",
+  "operation": "retrieveReachability",
+  "client_version": "v0.5.1",
+  "server_version": "v1.0.0",
+  "versions_behind": 2,
+  "breaking_crossed": 8,
+  "breaking_crossed_ops": 3,
+  "catalogue_breaking_crossed": 3,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Check if the device of subscriber dev030@nlipeval.example is reachable.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/device-status/v0/connectivity",
+    "body": {
+      "device": {
+        "networkAccessIdentifier": "dev030@nlipeval.example"
+      }
+    }
+  },
+  "client_facts": [
+    {
+      "fact": "ipv6_address",
+      "value": "2001:db8:a:1e::1"
+    }
+  ],
+  "client_answer_schema": {
+    "description": "v0.5.1 response schema: connectivityStatus enum",
+    "type": "object",
+    "required": [
+      "connectivityStatus"
+    ],
+    "properties": {
+      "connectivityStatus": {
+        "type": "string",
+        "enum": [
+          "CONNECTED_DATA",
+          "CONNECTED_SMS",
+          "NOT_CONNECTED"
+        ]
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D30"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/device-reachability-status/v1/retrieve",
+      "body": {
+        "device": {
+          "ipv6Address": "2001:db8:a:1e::1"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/device-reachability-status/v1/retrieve",
+      "body": {
+        "device": {
+          "ipv6Address": "2001:db8:a:1e::1",
+          "networkAccessIdentifier": "dev030@nlipeval.example"
+        }
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 200,
+    "body": {
+      "lastStatusTime": "2026-12-01T10:00:00Z",
+      "reachable": false
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "connectivityStatus": "NOT_CONNECTED"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [
+    "device.ipv6Address"
+  ],
+  "missing_info_source": {
+    "device.ipv6Address": "fact"
+  },
+  "change_tags_request": [
+    "renamed"
+  ],
+  "change_tags_response": [
+    "renamed",
+    "restructured"
+  ],
+  "material_fields": [
+    "device"
+  ],
+  "provenance": "authored"
+}

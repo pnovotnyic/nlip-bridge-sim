@@ -1,0 +1,543 @@
+# Requirements extracted from ECMA-430 (clauses 2 and 5-7) and ECMA-431 (clauses 2, 6, 6.1).
+# One entry per sentence that states a must / shall / should, or that states a rule without a modal verb
+# (implied: true; the level is then the strength we read into it). "may" sentences are permissions and are not
+# listed (they are used as test inputs). Quotes are word for word from stage1/standards/*.raw.txt and are verified
+# by tests/test_stage1_requirements.py.
+#
+# targets: message = a property of one NLIP message; endpoint = behaviour of a sending/receiving end-point;
+#          binding = behaviour of the base transfer protocol (HTTP).
+# testable: yes | partly | no. Every yes/partly entry has at least one check (checked by the same test).
+standards:
+  ECMA-430: {file: ECMA-430_1st_edition_december_2025.pdf, text: ECMA-430.raw.txt}
+  ECMA-431: {file: ECMA-431_1st_edition_december_2025.pdf, text: ECMA-431.raw.txt}
+requirements:
+  # ------------------------------------------------------------------ ECMA-430 clause 2
+  - id: E430-2-messages
+    standard: ECMA-430
+    clause: "2"
+    quote: "A conforming implementation of NLIP must provide and support messages and submessages as described in this specification."
+    level: must
+    target: endpoint
+    testable: "no"
+    implied: false
+    ambiguity: "Umbrella requirement; it has no check of its own and is covered by the clause 5 and 6 checks."
+  - id: E430-2-binding
+    standard: ECMA-430
+    clause: "2"
+    quote: "A conforming implementation of NLIP must select a base transfer protocol and conform to the specifications of the binding document of that base transfer protocol listed in Clause 3."
+    level: must
+    target: binding
+    testable: "no"
+    implied: false
+    ambiguity: "Umbrella requirement; it has no check of its own and is covered by the ECMA-431 checks."
+  - id: E430-2-security-profile
+    standard: ECMA-430
+    clause: "2"
+    quote: "A conforming production deployment of NLIP must select a security profile defined in ECMA-434 and support it."
+    level: must
+    target: endpoint
+    testable: "no"
+    implied: false
+    ambiguity: "Concerns a production deployment and ECMA-434, which is outside this evaluation."
+  # ------------------------------------------------------------------ ECMA-430 clause 5
+  - id: E430-5-case-insensitive
+    standard: ECMA-430
+    clause: "5"
+    quote: "Capitalization is not relevant to the name or value of the field."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb. It is not said which values it covers. Read here as: field names, the format value, the MessageType value and the subformat value are compared without regard to case; content is not."
+  - id: E430-5-json-types
+    standard: ECMA-430
+    clause: "5"
+    quote: "In the message and submessage structures, all types (arrays, strings, objects etc.) are represented as defined in ECMA-404 JSON specification."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb."
+  # ------------------------------------------------------------------ 5.1 first submessage
+  - id: E430-5.1.1-messagetype-optional
+    standard: ECMA-430
+    clause: "5.1.1"
+    quote: "The MessageType field is optional."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb: read as 'a receiver must accept a message without MessageType'."
+  - id: E430-5.1.1-messagetype-string
+    standard: ECMA-430
+    clause: "5.1.1"
+    quote: "Its value must be a string as defined by ECMA-404."
+    level: must
+    target: message
+    testable: "yes"
+    implied: false
+    ambiguity: ""
+  - id: E430-5.1.1-control-reserved
+    standard: ECMA-430
+    clause: "5.1.1"
+    quote: "The value of ‘control’ is reserved and indicates a message that is used to negotiate control parameters."
+    level: must
+    target: message
+    testable: partly
+    implied: true
+    ambiguity: "Clause 6.3 speaks of a 'control field set to true', whereas 5.1.1 defines control as a value of the MessageType field. The standard does not say whether these are one mechanism or two. Checks are run for both readings."
+  - id: E430-5.1.1-other-values-data
+    standard: ECMA-430
+    clause: "5.1.1"
+    quote: "If the field has any value other than ‘control’, it should be considered a data message, and its interpretation is left to the end-point receiving the message."
+    level: should
+    target: endpoint
+    testable: "yes"
+    implied: false
+    ambiguity: ""
+  - id: E430-5.1.2-format-required
+    standard: ECMA-430
+    clause: "5.1.2"
+    quote: "The format field is required."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb. The standard does not say how a receiver must treat a message that lacks a required field (reject, with which error)."
+  - id: E430-5.1.3-subformat-required
+    standard: ECMA-430
+    clause: "5.1.3"
+    quote: "The subformat field is required."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb. Same remark as for the format field."
+  - id: E430-5.1.4-content-required
+    standard: ECMA-430
+    clause: "5.1.4"
+    quote: "The content field is required."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb. Same remark as for the format field."
+  - id: E430-5.1.4-content-represented
+    standard: ECMA-430
+    clause: "5.1.4"
+    quote: "It must be represented as specified by the format and subformat field."
+    level: must
+    target: message
+    testable: partly
+    implied: false
+    ambiguity: "Annex A (informative) allows string, number, object, array, boolean and null for Content, while Table 1 describes text, tokens and URIs as strings. The standard does not say which combinations of format and content type are valid."
+  - id: E430-5.1.5-submessages-array
+    standard: ECMA-430
+    clause: "5.1.5"
+    quote: "When present, it must be represented as a array defined by ECMA-404 consisting of one or more submessages."
+    level: must
+    target: message
+    testable: "yes"
+    implied: false
+    ambiguity: "'One or more' would make an empty array invalid, but the JSON schema in Annex A has no minimum number of items."
+  - id: E430-5.1.5-order-significant
+    standard: ECMA-430
+    clause: "5.1.5"
+    quote: "the order of the submessages in the submessages field is significant."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb; read as 'order must be preserved'."
+  # ------------------------------------------------------------------ 5.2 submessage
+  - id: E430-5.2.1-label-key
+    standard: ECMA-430
+    clause: "5.2.1"
+    quote: "When present, it must have the key of “Label” without regard of the capitalization of the key."
+    level: must
+    target: message
+    testable: "yes"
+    implied: false
+    ambiguity: ""
+  - id: E430-5.2.1-label-string
+    standard: ECMA-430
+    clause: "5.2.1"
+    quote: "Its value field must be a string as defined by ECMA-404."
+    level: must
+    target: message
+    testable: "yes"
+    implied: false
+    ambiguity: ""
+  - id: E430-5.2.2-format-required
+    standard: ECMA-430
+    clause: "5.2.2"
+    quote: "The format field is required and is a string as defined by ECMA-404."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb."
+  - id: E430-5.2.3-subformat-required
+    standard: ECMA-430
+    clause: "5.2.3"
+    quote: "The subformat field is required and is a string as defined by ECMA-404."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb."
+  - id: E430-5.2.4-content-required
+    standard: ECMA-430
+    clause: "5.2.4"
+    quote: "This content field is required."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb."
+  # ------------------------------------------------------------------ 5.3 formats
+  - id: E430-5.3-format-values
+    standard: ECMA-430
+    clause: "5.3"
+    quote: "The format field must have one of the values described in Table 1."
+    level: must
+    target: message
+    testable: "yes"
+    implied: false
+    ambiguity: "Table 1 lists text, token, structured, binary, location and generic. Whether a receiver must reject other values is not said."
+  - id: E430-5.3-format-key-case
+    standard: ECMA-430
+    clause: "5.3"
+    quote: "The format key is “format” regardless of case."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb."
+  - id: E430-5.3-token-subformat
+    standard: ECMA-430
+    clause: "5.3"
+    quote: "The subformat begins with a prefix and may contain _ after the prefix and a suffix."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "Does not say whether a token subformat without any prefix structure is invalid, or whether the prefix match is by 'begins with' (as here) or by exact equality of the part before '_'."
+  - id: E430-5.3-structured-unknown-language
+    standard: ECMA-430
+    clause: "5.3"
+    quote: "If the programming language is not understood/supported by the end-point receiving it, it should send back a response using format of text informing the peer of the same."
+    level: should
+    target: endpoint
+    testable: "yes"
+    implied: false
+    ambiguity: "A receiver cannot know whether a subformat names a programming language or a private extension."
+  - id: E430-5.3-binary-content
+    standard: ECMA-430
+    clause: "5.3"
+    quote: "The subformat field must have content as one of the values of audio, image, sensor, or generic."
+    level: must
+    target: message
+    testable: partly
+    implied: false
+    ambiguity: "The same table row lists 'video/.mp3' as a valid subformat, and says 'mp3/mov for video', although video is not among the four allowed values. Checks use only the four listed values."
+  - id: E430-5.3-binary-encoding
+    standard: ECMA-430
+    clause: "5.3"
+    quote: "The encoding must be specific content encoding, e.g. bmp or jpeg for audio, mp3/mov for video etc."
+    level: must
+    target: message
+    testable: partly
+    implied: false
+    ambiguity: "'bmp or jpeg for audio' looks like a slip (bmp and jpeg are image encodings). The set of valid encodings is not given."
+  - id: E430-5.3-location-subformat
+    standard: ECMA-430
+    clause: "5.3"
+    quote: "The content specifies location."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "Subformats are given as 'text, GPS'. The format of a GPS content string is not specified."
+  - id: E430-5.3-generic-extension
+    standard: ECMA-430
+    clause: "5.3"
+    quote: "The subformat should include the name of an extension that both client and server support."
+    level: should
+    target: message
+    testable: "no"
+    implied: false
+    ambiguity: "Depends on out-of-band agreement between the peers."
+  - id: E430-5.3-process-all-fields
+    standard: ECMA-430
+    clause: "5.3"
+    quote: "All conforming end-points must support the processing of all fields, and support at least the text format field with the subformat of ‘English’."
+    level: must
+    target: endpoint
+    testable: "yes"
+    implied: false
+    ambiguity: "The standard does not say how the language is written in the subformat ('English', 'en', 'en-US'). Case is irrelevant by clause 5."
+  # ------------------------------------------------------------------ clause 6
+  - id: E430-6.1-client-first-submessage
+    standard: ECMA-430
+    clause: "6.1"
+    quote: "The client agent must send an NLIP message including the first submessage."
+    level: must
+    target: endpoint
+    testable: "yes"
+    implied: false
+    ambiguity: ""
+  - id: E430-6.1-server-response
+    standard: ECMA-430
+    clause: "6.1"
+    quote: "The server agent must send a response to the client agent as an NLIP message including the first submessage."
+    level: must
+    target: endpoint
+    testable: "yes"
+    implied: false
+    ambiguity: ""
+  - id: E430-6.2-tokens-required
+    standard: ECMA-430
+    clause: "6.2"
+    quote: "Submessages with format field of ‘token’ are required if the end-points are maintaining session state information or authentication information for other end-points in communication."
+    level: must
+    target: endpoint
+    testable: "no"
+    implied: false
+    ambiguity: "Conditional on an end-point's internal design; cannot be observed from outside."
+  - id: E430-6.2-token-echo
+    standard: ECMA-430
+    clause: "6.2"
+    quote: "the end-point must include the same submessage with the exact same format, subformat and content in its response message to the peer end-point, except when the token was initially created by the end-point."
+    level: must
+    target: endpoint
+    testable: "yes"
+    implied: false
+    ambiguity: "Does not say whether the echoed submessage must keep its position and Label. Read here as: format, subformat and content identical; position among the tokens kept as sent."
+  - id: E430-6.2-multiple-tokens
+    standard: ECMA-430
+    clause: "6.2"
+    quote: "A NLIP message may contain multiple submessages with format fields of ‘token’."
+    level: must
+    target: endpoint
+    testable: "yes"
+    implied: true
+    ambiguity: "A permission for the sender ('may'); read here as an obligation on the receiver to process several tokens, through 5.3 (process all fields)."
+  - id: E430-6.2-free-subformat
+    standard: ECMA-430
+    clause: "6.2"
+    quote: "A submessage with a field of ‘token’ may also contain a subformat which can be any general string, and not necessarily beginning with ‘conversation’ or ‘authentication’."
+    level: must
+    target: endpoint
+    testable: "yes"
+    implied: true
+    ambiguity: "A permission for the sender; read as an obligation on the receiver to echo such tokens too."
+  - id: E430-6.2.1-token-opaque
+    standard: ECMA-430
+    clause: "6.2.1"
+    quote: "The contents of the submessage with format ‘token’ are opaque to the protocol and can be interpreted only by the end-point creating it."
+    level: must
+    target: endpoint
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb. Read as: a peer must not change token content."
+  - id: E430-6.2.1-conversation-prefix
+    standard: ECMA-430
+    clause: "6.2.1"
+    quote: "An end-point including the token format may choose to add its identity after the ‘_’ character to identify who originated the conversation submessage."
+    level: must
+    target: message
+    testable: partly
+    implied: true
+    ambiguity: "A permission ('may choose'); read as: a subformat such as conversation_9.2.3.5 is a conversation token and must be recognised and echoed as one."
+  - id: E430-6.2.2-auth-reserved-prefix
+    standard: ECMA-430
+    clause: "6.2.2"
+    quote: "A submessage with format ‘token’ and subformat beginning with ‘authentication’ is intended to exchange authentication credentials with communicating end-points."
+    level: must
+    target: message
+    testable: "yes"
+    implied: true
+    ambiguity: "No modal verb. The reserved prefix is the word 'authentication' (5.3 and 6.2.2 agree)."
+  - id: E430-6.2.2-auth-translate
+    standard: ECMA-430
+    clause: "6.2.2"
+    quote: "Any end-point creating the authentication token in the first instance must implement the mechanism to translate the token (when returned by the client) into its appropriate credentials (such as user-name, password, certificates or other mechanisms)."
+    level: must
+    target: endpoint
+    testable: "no"
+    implied: false
+    ambiguity: "An internal mechanism; not observable."
+  - id: E430-6.2.2-auth-return-unmodified
+    standard: ECMA-430
+    clause: "6.2.2"
+    quote: "The other end-point is obligated to return the authentication token unmodified so that authentication can be performed seamlessly."
+    level: must
+    target: endpoint
+    testable: "yes"
+    implied: false
+    ambiguity: "'Obligated' is read as must."
+  - id: E430-6.3-control-response
+    standard: ECMA-430
+    clause: "6.3"
+    quote: "If a NLIP end-point receives a message which has the control field set to true, it must respond with a NLIP Message with control field set to true."
+    level: must
+    target: endpoint
+    testable: "yes"
+    implied: false
+    ambiguity: "There is no 'control field' in 5.1; MessageType='control' is what 5.1.1 defines. Two readings are tested: (a) MessageType 'control' in, MessageType 'control' out; (b) a boolean field 'control': true in and out."
+  - id: E430-6.4-oob-binary
+    standard: ECMA-430
+    clause: "6.4"
+    quote: "If a client has a large binary content that it wants to transmit using a mechanism that is more efficient than JSON Base64 encoding, it must use a base transfer protocol that supports such a mechanism."
+    level: must
+    target: endpoint
+    testable: "no"
+    implied: false
+    ambiguity: "Depends on the binding's upload mechanism; not testable without an upload endpoint (none is defined in ECMA-431)."
+  - id: E430-6.4-request-control
+    standard: ECMA-430
+    clause: "6.4"
+    quote: "This must be a message with the MessageType field set to ‘control’"
+    level: must
+    target: message
+    testable: "yes"
+    implied: false
+    ambiguity: "Here MessageType is used, not a control field (see 6.3)."
+  - id: E430-6.4-request-text
+    standard: ECMA-430
+    clause: "6.4"
+    quote: "the first submessage should include a text format request for the end-point to send large uploads."
+    level: should
+    target: message
+    testable: "yes"
+    implied: false
+    ambiguity: "'The first submessage' is ambiguous: the first submessage of the first-submessage object, or the message's own first submessage. The wording of the text request is not specified."
+  - id: E430-6.4-response-control-uri
+    standard: ECMA-430
+    clause: "6.4"
+    quote: "The response to this request message from the server agent should be a message with MessageType field set to ‘control’ containing a submessage with the format field set of ‘structured’ and subformat of a URI."
+    level: should
+    target: endpoint
+    testable: "yes"
+    implied: false
+    ambiguity: "'Subformat of a URI' is read as the subformat value 'uri' (the Table 1 value), with the URI itself in content."
+  - id: E430-6.4-response-endpoint
+    standard: ECMA-430
+    clause: "6.4"
+    quote: "The URI should be to an end-point where the base transfer protocol can be used to transmit the large binary content."
+    level: should
+    target: endpoint
+    testable: partly
+    implied: false
+    ambiguity: "Only whether the URI is well formed and on a different port (ECMA-431 6.1) can be checked."
+  # ------------------------------------------------------------------ clause 7
+  - id: E430-7-properties
+    standard: ECMA-430
+    clause: "7"
+    quote: "A base transfer protocol must satisfy the following properties."
+    level: must
+    target: binding
+    testable: "no"
+    implied: false
+    ambiguity: "Introduces 7.1 to 7.3, which have their own entries."
+  - id: E430-7.1-encrypted
+    standard: ECMA-430
+    clause: "7.1"
+    quote: "The base transfer protocol must support communication using an encrypted transport."
+    level: must
+    target: binding
+    testable: partly
+    implied: false
+    ambiguity: "A property of the base transfer protocol (HTTP/TLS), not of an NLIP library. Tested by serving the library's app over TLS."
+  - id: E430-7.1-deployed-encrypted
+    standard: ECMA-430
+    clause: "7.1"
+    quote: "However, any deployed implementation of the NLIP protocol must happen over a communication channel that uses encryption."
+    level: must
+    target: endpoint
+    testable: "no"
+    implied: false
+    ambiguity: "Concerns a deployment."
+  - id: E430-7.2-authentication
+    standard: ECMA-430
+    clause: "7.2"
+    quote: "The base transfer protocol must implement or enable authentication among the client and server."
+    level: must
+    target: binding
+    testable: "no"
+    implied: false
+    ambiguity: "HTTP enables authentication; ECMA-431 does not say which scheme or header an NLIP end-point uses. Not tested."
+  - id: E430-7.3-endpoint
+    standard: ECMA-430
+    clause: "7.3"
+    quote: "The base transfer protocol must support at least one communication end point for the NLIP server agent to use to receive NLIP messages."
+    level: must
+    target: binding
+    testable: "yes"
+    implied: false
+    ambiguity: ""
+  # ------------------------------------------------------------------ ECMA-431
+  - id: E431-2-support-all
+    standard: ECMA-431
+    clause: "2"
+    quote: "A conforming implementation must provide and support all types of messages and submessage along with the semantics defined in the NLIP specification draft, and support them over HTTP or HTTPS."
+    level: must
+    target: binding
+    testable: "no"
+    implied: false
+    ambiguity: "Umbrella requirement; it has no check of its own and is covered by the clause 5 and 6 checks, which are run over HTTP."
+  - id: E431-2-security-profile
+    standard: ECMA-431
+    clause: "2"
+    quote: "A conforming production deployment of NLIP must select a security profile defined in ECMA-434 and support it."
+    level: must
+    target: endpoint
+    testable: "no"
+    implied: false
+    ambiguity: "Concerns a production deployment and ECMA-434."
+  - id: E431-6-tcp-port
+    standard: ECMA-431
+    clause: "6"
+    quote: "A conformant implementation of NLIP over HTTP/HTTPS will have the server end-point running on a TCP Server Port."
+    level: must
+    target: binding
+    testable: "yes"
+    implied: true
+    ambiguity: "'Will have' read as must."
+  - id: E431-6-url-path
+    standard: ECMA-431
+    clause: "6"
+    quote: "This end-point would be accessible using a URL defined as https://<server_name>:port/nlip."
+    level: must
+    target: binding
+    testable: "yes"
+    implied: true
+    ambiguity: "'Would be' read as must. The path is /nlip, with no trailing slash; whether /nlip/ must also work is not said."
+  - id: E431-6-post
+    standard: ECMA-431
+    clause: "6"
+    quote: "The end-point shall support accepting an NLIP message using the POST command of HTTP."
+    level: shall
+    target: binding
+    testable: "yes"
+    implied: false
+    ambiguity: "The request content type, the response content type, the status codes and any authentication header are not defined by the binding."
+  - id: E431-6-http-version
+    standard: ECMA-431
+    clause: "6"
+    quote: "The end-point should use either HTTP/1.1 or HTTP/2 as the base transfer protocol"
+    level: should
+    target: binding
+    testable: "yes"
+    implied: false
+    ambiguity: ""
+  - id: E431-6.1-upload-port
+    standard: ECMA-431
+    clause: "6.1"
+    quote: "This upload will be provided at any port different than the port used by NLIP end point."
+    level: must
+    target: binding
+    testable: partly
+    implied: true
+    ambiguity: "Only applies if an upload end-point is provided ('may also provide')."

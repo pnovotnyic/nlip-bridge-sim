@@ -1,0 +1,343 @@
+# Answer schemas for L3 Quality-on-Demand.
+# These define the fields a client of each version reads from the response.
+# createSession returns 201; getSession returns 200; deleteSession returns 204.
+
+api: L3
+server_version: v1.1.0
+
+schemas:
+  v0.8.1:
+    createSession:
+      description: "v0.8.1 createSession response: id (UUID), startedAt/expiresAt Unix int, ueId, asId, qos, [duration]"
+      type: object
+      required: [id, startedAt, expiresAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        startedAt:
+          type: integer
+          format: int64
+        expiresAt:
+          type: integer
+          format: int64
+        duration:
+          type: integer
+        ueId:
+          type: object
+        asId:
+          type: object
+        qos:
+          type: string
+    getSession:
+      description: "v0.8.1 getSession response: same as createSession response"
+      type: object
+      required: [id, startedAt, expiresAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        startedAt:
+          type: integer
+          format: int64
+        expiresAt:
+          type: integer
+          format: int64
+        duration:
+          type: integer
+        ueId:
+          type: object
+        asId:
+          type: object
+        qos:
+          type: string
+    deleteSession:
+      description: "v0.8.1 deleteSession: 204 No Content"
+      type: "null"
+
+  v0.9.0:
+    createSession:
+      description: "v0.9.0 createSession: sessionId, device, applicationServer, qosProfile, startedAt/expiresAt Unix int, qosStatus"
+      type: object
+      required: [sessionId, startedAt, expiresAt, qosStatus]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        startedAt:
+          type: integer
+          format: int64
+        expiresAt:
+          type: integer
+          format: int64
+        duration:
+          type: integer
+        device:
+          type: object
+        applicationServer:
+          type: object
+        qosProfile:
+          type: string
+        qosStatus:
+          type: string
+          enum: [REQUESTED, AVAILABLE, UNAVAILABLE]
+    getSession:
+      description: "v0.9.0 getSession: same fields as createSession"
+      type: object
+      required: [sessionId, startedAt, expiresAt, qosStatus]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        startedAt:
+          type: integer
+          format: int64
+        expiresAt:
+          type: integer
+          format: int64
+        duration:
+          type: integer
+        device:
+          type: object
+        applicationServer:
+          type: object
+        qosProfile:
+          type: string
+        qosStatus:
+          type: string
+          enum: [REQUESTED, AVAILABLE, UNAVAILABLE]
+    deleteSession:
+      description: "v0.9.0 deleteSession: 204 No Content"
+      type: "null"
+
+  v0.10.0:
+    createSession:
+      description: "v0.10.0 createSession: same as v0.9.0"
+      type: object
+      required: [sessionId, startedAt, expiresAt, qosStatus]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        startedAt:
+          type: integer
+          format: int64
+        expiresAt:
+          type: integer
+          format: int64
+        duration:
+          type: integer
+        device:
+          type: object
+        applicationServer:
+          type: object
+        qosProfile:
+          type: string
+        qosStatus:
+          type: string
+          enum: [REQUESTED, AVAILABLE, UNAVAILABLE]
+    getSession:
+      description: "v0.10.0 getSession: same as v0.9.0"
+      type: object
+      required: [sessionId, startedAt, expiresAt, qosStatus]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        startedAt:
+          type: integer
+          format: int64
+        expiresAt:
+          type: integer
+          format: int64
+        duration:
+          type: integer
+        device:
+          type: object
+        applicationServer:
+          type: object
+        qosProfile:
+          type: string
+        qosStatus:
+          type: string
+          enum: [REQUESTED, AVAILABLE, UNAVAILABLE]
+    deleteSession:
+      description: "v0.10.0 deleteSession: 204 No Content"
+      type: "null"
+
+  v0.11.0:
+    createSession:
+      description: "v0.11.0 createSession: sessionId, RFC3339 timestamps, qosStatus, statusInfo, duration required"
+      type: object
+      required: [sessionId, duration, qosStatus]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        device:
+          type: object
+        applicationServer:
+          type: object
+        qosProfile:
+          type: string
+        qosStatus:
+          type: string
+          enum: [REQUESTED, AVAILABLE, UNAVAILABLE]
+        statusInfo:
+          type: string
+    getSession:
+      description: "v0.11.0 getSession: same as createSession"
+      type: object
+      required: [sessionId, duration, qosStatus]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        device:
+          type: object
+        applicationServer:
+          type: object
+        qosProfile:
+          type: string
+        qosStatus:
+          type: string
+          enum: [REQUESTED, AVAILABLE, UNAVAILABLE]
+        statusInfo:
+          type: string
+    deleteSession:
+      description: "v0.11.0 deleteSession: 204 No Content"
+      type: "null"
+
+  v1.0.0:
+    createSession:
+      description: "v1.0.0 createSession: same as v0.11.0"
+      type: object
+      required: [sessionId, duration, qosStatus]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        device:
+          type: object
+        applicationServer:
+          type: object
+        qosProfile:
+          type: string
+        qosStatus:
+          type: string
+          enum: [REQUESTED, AVAILABLE, UNAVAILABLE]
+        statusInfo:
+          type: string
+    getSession:
+      description: "v1.0.0 getSession: same as v0.11.0"
+      type: object
+      required: [sessionId, duration, qosStatus]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        device:
+          type: object
+        applicationServer:
+          type: object
+        qosProfile:
+          type: string
+        qosStatus:
+          type: string
+          enum: [REQUESTED, AVAILABLE, UNAVAILABLE]
+        statusInfo:
+          type: string
+    deleteSession:
+      description: "v1.0.0 deleteSession: 204 No Content"
+      type: "null"
+
+  v1.1.0:
+    createSession:
+      description: "v1.1.0 createSession: same as v0.11.0 / v1.0.0 (server version)"
+      type: object
+      required: [sessionId, duration, qosStatus]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        device:
+          type: object
+        applicationServer:
+          type: object
+        qosProfile:
+          type: string
+        qosStatus:
+          type: string
+          enum: [REQUESTED, AVAILABLE, UNAVAILABLE]
+        statusInfo:
+          type: string
+    getSession:
+      description: "v1.1.0 getSession: same as v0.11.0"
+      type: object
+      required: [sessionId, duration, qosStatus]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        device:
+          type: object
+        applicationServer:
+          type: object
+        qosProfile:
+          type: string
+        qosStatus:
+          type: string
+          enum: [REQUESTED, AVAILABLE, UNAVAILABLE]
+        statusInfo:
+          type: string
+    deleteSession:
+      description: "v1.1.0 deleteSession: 204 No Content"
+      type: "null"

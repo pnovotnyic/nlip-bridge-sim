@@ -1,0 +1,83 @@
+{
+  "rung": "R4",
+  "model": "deepseek-ai/DeepSeek-V3.2",
+  "provider": "rits",
+  "settings_sent": {
+    "params": {
+      "temperature": 1.0,
+      "top_p": 0.95,
+      "seed": 0
+    },
+    "extra_body": {},
+    "thinking": "default_as_served"
+  },
+  "tests": {
+    "1_chat": {
+      "pass": true,
+      "reply": "pong",
+      "error": null,
+      "latency_s": 1.137,
+      "usage": {
+        "prompt_tokens": 19,
+        "completion_tokens": 3,
+        "reasoning_tokens": null
+      }
+    },
+    "2_system_prompt": {
+      "pass": true,
+      "reply": "BANANA",
+      "error": null
+    },
+    "3_structured": {
+      "pass": true,
+      "chosen_mode": "json_schema",
+      "modes": {
+        "json_schema": {
+          "valid": 5,
+          "of": 5,
+          "errors": []
+        }
+      },
+      "median_latency_s": 4.77
+    },
+    "4_long_context": {
+      "pass": true,
+      "prompt_tokens_reported": 19852,
+      "reply": "TANGO-4417",
+      "error": null,
+      "latency_s": 15.208
+    },
+    "5_latency": {
+      "median_latency_s_4k_prompt_300_tokens": 29.04,
+      "completion_tokens": [
+        300,
+        300,
+        300
+      ],
+      "concurrency": {
+        "1": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 1.17
+        },
+        "2": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 1.17
+        },
+        "4": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 1.48
+        },
+        "8": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 3.49
+        }
+      },
+      "safe_concurrency": 8
+    }
+  },
+  "pass_1_to_4": true
+}

@@ -1,0 +1,299 @@
+openapi: 3.0.3
+info:
+  title: Device Status
+  version: 0.5.1
+paths:
+  /connectivity:
+    post:
+      tags:
+      - Device connectivity status
+      summary: Get the current connectivity status information
+      description: Get the current connectivity status information
+      operationId: getConnectivityStatus
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                device:
+                  description: 'End-user equipment able to connect to a mobile network. Examples of devices include smartphones
+                    or IoT sensors/actuators.
+
+
+                    The developer can choose to provide the below specified device identifiers:
+
+
+                    * `ipv4Address`
+
+                    * `ipv6Address`
+
+                    * `phoneNumber`
+
+                    * `networkAccessIdentifier`
+
+
+                    NOTE: the MNO might support only a subset of these options. The API invoker can provide multiple identifiers
+                    to be compatible across different MNOs. In this case the identifiers MUST belong to the same device.
+
+                    '
+                  type: object
+                  properties:
+                    phoneNumber:
+                      description: A public identifier addressing a telephone subscription. In mobile networks it corresponds
+                        to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally
+                        unique it has to be formatted in international format, according to E.164 standard, optionally prefixed
+                        with '+'.
+                      type: string
+                      pattern: ^\+?[0-9]{5,15}$
+                      example: '123456789'
+                    networkAccessIdentifier:
+                      description: A public identifier addressing a subscription in a mobile network. In 3GPP terminology,
+                        it corresponds to the GPSI formatted with the External Identifier ({Local Identifier}@{Domain Identifier}).
+                        Unlike the telephone number, the network access identifier is not subjected to portability ruling
+                        in force, and is individually managed by each operator.
+                      type: string
+                      example: 123456789@domain.com
+                    ipv4Address:
+                      type: object
+                      description: 'The device should be identified by either the public (observed) IP address and port as
+                        seen by the application server, or the private (local) and any public (observed) IP addresses in use
+                        by the device (this information can be obtained by various means, for example from some DNS servers).
+
+
+                        If the allocated and observed IP addresses are the same (i.e. NAT is not in use) then  the same address
+                        should be specified for both publicAddress and privateAddress.
+
+
+                        If NAT64 is in use, the device should be identified by its publicAddress and publicPort, or separately
+                        by its allocated IPv6 address (field ipv6Address of the Device object)
+
+
+                        In all cases, publicAddress must be specified, along with at least one of either privateAddress or
+                        publicPort, dependent upon which is known. In general, mobile devices cannot be identified by their
+                        public IPv4 address alone.
+
+                        '
+                      properties:
+                        publicAddress:
+                          description: A single IPv4 address with no subnet mask
+                          type: string
+                          format: ipv4
+                          example: 84.125.93.10
+                        privateAddress:
+                          description: A single IPv4 address with no subnet mask
+                          type: string
+                          format: ipv4
+                          example: 84.125.93.10
+                        publicPort:
+                          description: TCP or UDP port number
+                          type: integer
+                          minimum: 0
+                          maximum: 65535
+                      anyOf:
+                      - required:
+                        - publicAddress
+                        - privateAddress
+                      - required:
+                        - publicAddress
+                        - publicPort
+                      example:
+                        publicAddress: 84.125.93.10
+                        publicPort: 59765
+                    ipv6Address:
+                      description: 'The device should be identified by the observed IPv6 address, or by any single IPv6 address
+                        from within the subnet allocated to the device (e.g. adding ::0 to the /64 prefix).
+
+                        '
+                      type: string
+                      format: ipv6
+                      example: 2001:db8:85a3:8d3:1319:8a2e:370:7344
+                  minProperties: 1
+              required:
+              - device
+        required: true
+      responses:
+        '200':
+          description: Contains information about current connectivity status
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - connectivityStatus
+                properties:
+                  connectivityStatus:
+                    description: 'CONNECTED_DATA: The device is connected to the network for Data usage
+
+
+                      CONNECTED_SMS: The device is connected to the network for SMS usage
+
+
+                      NOT_CONNECTED: The device is not connected
+
+                      '
+                    type: string
+                    enum:
+                    - CONNECTED_DATA
+                    - CONNECTED_SMS
+                    - NOT_CONNECTED
+              examples:
+                Connected-With-SMS:
+                  value:
+                    connectivityStatus: CONNECTED_SMS
+                Connected-With-DATA:
+                  value:
+                    connectivityStatus: CONNECTED_DATA
+                Not-Connected:
+                  value:
+                    connectivityStatus: NOT_CONNECTED
+        '400':
+          description: Problem with the client request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              example:
+                status: 400
+                code: INVALID_ARGUMENT
+                message: Client specified an invalid argument, request body or query param
+        '401':
+          description: Authentication problem with the client request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              example:
+                status: 401
+                code: UNAUTHENTICATED
+                message: Request not authenticated due to missing, invalid, or expired credentials
+        '403':
+          description: Client does not have sufficient permission
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              example:
+                status: 403
+                code: PERMISSION_DENIED
+                message: Client does not have sufficient permissions to perform this action
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              example:
+                status: 404
+                code: NOT_FOUND
+                message: The specified resource is not found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              example:
+                status: 500
+                code: INTERNAL
+                message: Server error
+        '503':
+          description: Service unavailable. Typically the server is down.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - status
+                - code
+                - message
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP response status code
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+              example:
+                status: 503
+                code: UNAVAILABLE
+                message: Service unavailable
+servers:
+- url: '{apiRoot}/device-status/v0'
+  variables:
+    apiRoot:
+      default: http://localhost:9091
+      description: API root

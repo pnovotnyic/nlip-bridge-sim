@@ -1,0 +1,9 @@
+tokenizer,output_case,sessions,calls,input_mtok,output_mtok,usd
+R1,output as R3 smoke,840,3880,30.11,1.29,146
+R1,output x2,840,3880,30.11,2.57,172
+R2,output as R3 smoke,840,3880,31.32,1.29,151
+R2,output x2,840,3880,31.32,2.57,177
+R3,output as R3 smoke,840,3880,29.85,1.29,145
+R3,output x2,840,3880,29.85,2.57,171
+R4,output as R3 smoke,840,3880,30.96,1.29,150
+R4,output x2,840,3880,30.96,2.57,175

@@ -1,0 +1,166 @@
+{
+  "schema_version": "1",
+  "task_id": "L3-m05-v1.0.0",
+  "intent_id": "m05",
+  "pilot": false,
+  "api": "L3",
+  "operation": "createSession",
+  "client_version": "v1.0.0",
+  "server_version": "v1.1.0",
+  "versions_behind": 1,
+  "breaking_crossed": 0,
+  "breaking_crossed_ops": 0,
+  "catalogue_breaking_crossed": 0,
+  "prompt_half": true,
+  "pilot_round": null,
+  "intent_text": "Create a large-file transfer session for the device at 192.0.2.5 port 40005 to the content server at 198.51.100.40, server port 443, for 4 hours.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/quality-on-demand/v1/sessions",
+    "body": {
+      "duration": 14400,
+      "device": {
+        "ipv4Address": {
+          "publicAddress": "192.0.2.5",
+          "publicPort": 40005
+        }
+      },
+      "applicationServer": {
+        "ipv4Address": "198.51.100.40"
+      },
+      "applicationServerPorts": {
+        "ports": [
+          443
+        ]
+      },
+      "qosProfile": "QOS_L"
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v1.0.0 createSession: same as v0.11.0",
+    "type": "object",
+    "required": [
+      "sessionId",
+      "duration",
+      "qosStatus"
+    ],
+    "properties": {
+      "sessionId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "startedAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "expiresAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "device": {
+        "type": "object"
+      },
+      "applicationServer": {
+        "type": "object"
+      },
+      "qosProfile": {
+        "type": "string"
+      },
+      "qosStatus": {
+        "type": "string",
+        "enum": [
+          "REQUESTED",
+          "AVAILABLE",
+          "UNAVAILABLE"
+        ]
+      },
+      "statusInfo": {
+        "type": "string"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D05"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/quality-on-demand/v1/sessions",
+      "body": {
+        "duration": 14400,
+        "device": {
+          "ipv4Address": {
+            "publicAddress": "192.0.2.5",
+            "publicPort": 40005
+          }
+        },
+        "applicationServer": {
+          "ipv4Address": "198.51.100.40"
+        },
+        "applicationServerPorts": {
+          "ports": [
+            443
+          ]
+        },
+        "qosProfile": "QOS_L"
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 201,
+    "body": {
+      "applicationServer": {
+        "ipv4Address": "198.51.100.40"
+      },
+      "applicationServerPorts": {
+        "ports": [
+          443
+        ]
+      },
+      "qosProfile": "QOS_L",
+      "sessionId": "c582b2cd-73cc-5f3a-aa52-d2c8c99627de",
+      "duration": 14400,
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T16:00:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "duration": 14400,
+      "applicationServer": {
+        "ipv4Address": "198.51.100.40"
+      },
+      "applicationServerPorts": {
+        "ports": [
+          443
+        ]
+      },
+      "qosProfile": "QOS_L",
+      "sessionId": "c582b2cd-73cc-5f3a-aa52-d2c8c99627de",
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T16:00:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [],
+  "change_tags_response": [],
+  "material_fields": [
+    "operation",
+    "sessionId",
+    "device",
+    "applicationServer",
+    "qosProfile",
+    "duration"
+  ],
+  "provenance": "authored"
+}

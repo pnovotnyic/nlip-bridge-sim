@@ -1,0 +1,156 @@
+{
+  "schema_version": "1",
+  "task_id": "L3-m15-v0.9.0",
+  "intent_id": "m15",
+  "pilot": false,
+  "api": "L3",
+  "operation": "createSession",
+  "client_version": "v0.9.0",
+  "server_version": "v1.1.0",
+  "versions_behind": 4,
+  "breaking_crossed": 17,
+  "breaking_crossed_ops": 11,
+  "catalogue_breaking_crossed": 6,
+  "prompt_half": true,
+  "pilot_round": null,
+  "intent_text": "Set up a 6-hour IoT telemetry session for the device with IPv6 2001:db8:a:f::1 to the platform at 198.51.100.50, with status updates to https://app.example.org/notify/iot.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/qod/v0/sessions",
+    "body": {
+      "duration": 21600,
+      "device": {
+        "ipv6Address": "2001:db8:a:f::1"
+      },
+      "applicationServer": {
+        "ipv4Address": "198.51.100.50"
+      },
+      "qosProfile": "QOS_S",
+      "webhook": {
+        "notificationUrl": "https://app.example.org/notify/iot"
+      }
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v0.9.0 createSession: sessionId, device, applicationServer, qosProfile, startedAt/expiresAt Unix int, qosStatus",
+    "type": "object",
+    "required": [
+      "sessionId",
+      "startedAt",
+      "expiresAt",
+      "qosStatus"
+    ],
+    "properties": {
+      "sessionId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "startedAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "expiresAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "device": {
+        "type": "object"
+      },
+      "applicationServer": {
+        "type": "object"
+      },
+      "qosProfile": {
+        "type": "string"
+      },
+      "qosStatus": {
+        "type": "string",
+        "enum": [
+          "REQUESTED",
+          "AVAILABLE",
+          "UNAVAILABLE"
+        ]
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D15"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/quality-on-demand/v1/sessions",
+      "body": {
+        "duration": 21600,
+        "device": {
+          "ipv6Address": "2001:db8:a:f::1"
+        },
+        "applicationServer": {
+          "ipv4Address": "198.51.100.50"
+        },
+        "qosProfile": "QOS_S",
+        "sink": "https://app.example.org/notify/iot"
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 201,
+    "body": {
+      "applicationServer": {
+        "ipv4Address": "198.51.100.50"
+      },
+      "qosProfile": "QOS_S",
+      "sink": "https://app.example.org/notify/iot",
+      "sessionId": "5b8fb28b-7b84-5ccc-b611-cd7aab3ea0f5",
+      "duration": 21600,
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T18:00:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "duration": 21600,
+      "applicationServer": {
+        "ipv4Address": "198.51.100.50"
+      },
+      "qosProfile": "QOS_S",
+      "sessionId": "5b8fb28b-7b84-5ccc-b611-cd7aab3ea0f5",
+      "webhook": {
+        "notificationUrl": "https://app.example.org/notify/iot"
+      },
+      "startedAt": 1796126400,
+      "expiresAt": 1796148000,
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [
+    "renamed",
+    "restructured",
+    "unit_format",
+    "newly_required"
+  ],
+  "change_tags_response": [
+    "renamed",
+    "restructured",
+    "unit_format",
+    "newly_required"
+  ],
+  "material_fields": [
+    "operation",
+    "sessionId",
+    "device",
+    "applicationServer",
+    "qosProfile",
+    "duration"
+  ],
+  "provenance": "authored"
+}

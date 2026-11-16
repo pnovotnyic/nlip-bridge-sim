@@ -1,0 +1,73 @@
+{
+  "rung": "R1",
+  "model": "nlip-qwen3-4b",
+  "provider": "ollama",
+  "settings_sent": {
+    "params": {
+      "temperature": 0.6,
+      "top_p": 0.95,
+      "seed": 0
+    },
+    "extra_body": {},
+    "thinking": "default_on"
+  },
+  "tests": {
+    "1_chat": {
+      "pass": true,
+      "reply": "pong",
+      "error": null,
+      "latency_s": 4.969,
+      "usage": {
+        "prompt_tokens": 28,
+        "completion_tokens": 82,
+        "reasoning_tokens": null
+      }
+    },
+    "2_system_prompt": {
+      "pass": true,
+      "reply": "BANANA",
+      "error": null
+    },
+    "3_structured": {
+      "pass": true,
+      "chosen_mode": "json_schema",
+      "modes": {
+        "json_schema": {
+          "valid": 5,
+          "of": 5,
+          "errors": []
+        }
+      },
+      "median_latency_s": 13.45
+    },
+    "4_long_context": {
+      "pass": true,
+      "prompt_tokens_reported": 19643,
+      "reply": "TANGO-4417",
+      "error": null,
+      "latency_s": 108.873
+    },
+    "5_latency": {
+      "median_latency_s_4k_prompt_300_tokens": 19.0,
+      "completion_tokens": [
+        300,
+        300,
+        300
+      ],
+      "concurrency": {
+        "1": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 0.0
+        },
+        "2": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 0.01
+        }
+      },
+      "safe_concurrency": 2
+    }
+  },
+  "pass_1_to_4": true
+}

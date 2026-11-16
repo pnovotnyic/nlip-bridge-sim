@@ -1,0 +1,22 @@
+# The implementations under test, pinned. Code is downloaded by stage1/setup.sh into stage1/vendor/ (not committed).
+implementations:
+  - key: nlip_sdk
+    repository: https://github.com/nlip-project/nlip_sdk
+    commit: b3a6e845773af2c0c2b9e885abe8e4f6ab313dcc
+    version: 0.1.3
+    role: message model (checked through its Python API in stage1/venvs/sdk)
+  - key: nlip_server
+    repository: https://github.com/nlip-project/nlip_server
+    commit: acdbfc1a0dd1288675128ecc10c9809ec884f51e
+    version: 0.1.3
+    role: HTTP server (FastAPI; checked with a minimal application, stage1/apps/nlip_server_ack.py, and with its own echo application)
+    environment: stage1/venvs/server (fastapi 0.162.5, pydantic 2.14.3, uvicorn 0.54.0, nlip_sdk from the pinned commit)
+  - key: ts_client
+    repository: https://github.com/nlip-project/examples
+    commit: a96488f9c849889cbab34123048834ed54c5558f
+    path: nlip_client_pwa_ts/src/components/network.ts
+    role: client code that builds and reads messages, run unmodified under Node (fetch is replaced or redirected by stage1/drivers/ts_driver.mjs)
+    not_tested: nlip_client_vite_ts (same author, a second small client; see the report)
+  - key: ours
+    path: nlipeval/nlip
+    role: model, validator, HTTP client and server

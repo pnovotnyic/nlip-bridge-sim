@@ -1,0 +1,121 @@
+client,server,message,description,outcome,reason
+nlip_sdk,nlip_server,M01,"text, English",ok,
+nlip_sdk,nlip_server,M02,text with non-ASCII characters,ok,
+nlip_sdk,nlip_server,M03,"text, French subformat",ok,
+nlip_sdk,nlip_server,M04,"structured/json, nested content",ok,
+nlip_sdk,nlip_server,M05,text with a binary (image) submessage,ok,
+nlip_sdk,nlip_server,M06,"three submessages in order: text, structured/json, location/gps, with labels",ok,
+nlip_sdk,nlip_server,M07,conversation token,ok,
+nlip_sdk,nlip_server,M08,authentication token,ok,
+nlip_sdk,nlip_server,M09,conversation and authentication token together,ok,
+nlip_sdk,nlip_server,M10,token with a free subformat (group_7),ok,
+nlip_sdk,nlip_server,M11,"conversation, turn 1 (token sent)",ok,
+nlip_sdk,nlip_server,M12,"conversation, turn 2 (same token)",ok,
+nlip_sdk,nlip_server,M13,"conversation, turn 3 (same token)",ok,
+nlip_sdk,nlip_server,M14,control message (MessageType control),ok,
+nlip_sdk,nlip_server,M15,control request for an out-of-band upload end-point,fail,no structured/uri submessage in the answer
+nlip_sdk,nlip_server,M16,control message (field control=true),not built,the client has no way to build this message
+nlip_sdk,nlip_server,M17,error case: a message without content,not built,the client has no way to build this message
+nlip_sdk,nlip_server,M18,structured message in a programming language (COBOL),fail,"answered with format 'structured', not text"
+nlip_sdk,nlip_server,M19,location/gps,ok,
+nlip_sdk,nlip_server,M20,text of 100 000 characters,ok,
+nlip_sdk,ours,M01,"text, English",ok,
+nlip_sdk,ours,M02,text with non-ASCII characters,ok,
+nlip_sdk,ours,M03,"text, French subformat",ok,
+nlip_sdk,ours,M04,"structured/json, nested content",ok,
+nlip_sdk,ours,M05,text with a binary (image) submessage,ok,
+nlip_sdk,ours,M06,"three submessages in order: text, structured/json, location/gps, with labels",ok,
+nlip_sdk,ours,M07,conversation token,ok,
+nlip_sdk,ours,M08,authentication token,ok,
+nlip_sdk,ours,M09,conversation and authentication token together,ok,
+nlip_sdk,ours,M10,token with a free subformat (group_7),ok,
+nlip_sdk,ours,M11,"conversation, turn 1 (token sent)",ok,
+nlip_sdk,ours,M12,"conversation, turn 2 (same token)",ok,
+nlip_sdk,ours,M13,"conversation, turn 3 (same token)",ok,
+nlip_sdk,ours,M14,control message (MessageType control),ok,
+nlip_sdk,ours,M15,control request for an out-of-band upload end-point,ok,
+nlip_sdk,ours,M16,control message (field control=true),not built,the client has no way to build this message
+nlip_sdk,ours,M17,error case: a message without content,not built,the client has no way to build this message
+nlip_sdk,ours,M18,structured message in a programming language (COBOL),ok,
+nlip_sdk,ours,M19,location/gps,ok,
+nlip_sdk,ours,M20,text of 100 000 characters,ok,
+ts_client,nlip_server,M01,"text, English",ok,
+ts_client,nlip_server,M02,text with non-ASCII characters,ok,
+ts_client,nlip_server,M03,"text, French subformat",not built,the client has no code that builds this message
+ts_client,nlip_server,M04,"structured/json, nested content",not built,the client has no code that builds this message
+ts_client,nlip_server,M05,text with a binary (image) submessage,ok,
+ts_client,nlip_server,M06,"three submessages in order: text, structured/json, location/gps, with labels",not built,the client has no code that builds this message
+ts_client,nlip_server,M07,conversation token,not built,the client has no code that builds this message
+ts_client,nlip_server,M08,authentication token,not built,the client has no code that builds this message
+ts_client,nlip_server,M09,conversation and authentication token together,not built,the client has no code that builds this message
+ts_client,nlip_server,M10,token with a free subformat (group_7),not built,the client has no code that builds this message
+ts_client,nlip_server,M11,"conversation, turn 1 (token sent)",not built,the client has no code that builds this message
+ts_client,nlip_server,M12,"conversation, turn 2 (same token)",not built,the client has no code that builds this message
+ts_client,nlip_server,M13,"conversation, turn 3 (same token)",not built,the client has no code that builds this message
+ts_client,nlip_server,M14,control message (MessageType control),not built,the client has no code that builds this message
+ts_client,nlip_server,M15,control request for an out-of-band upload end-point,not built,the client has no code that builds this message
+ts_client,nlip_server,M16,control message (field control=true),fail,answer does not carry control=true
+ts_client,nlip_server,M17,error case: a message without content,not built,the client has no code that builds this message
+ts_client,nlip_server,M18,structured message in a programming language (COBOL),not built,the client has no code that builds this message
+ts_client,nlip_server,M19,location/gps,not built,the client has no code that builds this message
+ts_client,nlip_server,M20,text of 100 000 characters,ok,
+ts_client,ours,M01,"text, English",ok,
+ts_client,ours,M02,text with non-ASCII characters,ok,
+ts_client,ours,M03,"text, French subformat",not built,the client has no code that builds this message
+ts_client,ours,M04,"structured/json, nested content",not built,the client has no code that builds this message
+ts_client,ours,M05,text with a binary (image) submessage,fail,"HTTP 400, body {'format': 'text', 'subformat': 'English', 'content': ""Invalid NLIP message: E430-5.3-binary-content"
+ts_client,ours,M06,"three submessages in order: text, structured/json, location/gps, with labels",not built,the client has no code that builds this message
+ts_client,ours,M07,conversation token,not built,the client has no code that builds this message
+ts_client,ours,M08,authentication token,not built,the client has no code that builds this message
+ts_client,ours,M09,conversation and authentication token together,not built,the client has no code that builds this message
+ts_client,ours,M10,token with a free subformat (group_7),not built,the client has no code that builds this message
+ts_client,ours,M11,"conversation, turn 1 (token sent)",not built,the client has no code that builds this message
+ts_client,ours,M12,"conversation, turn 2 (same token)",not built,the client has no code that builds this message
+ts_client,ours,M13,"conversation, turn 3 (same token)",not built,the client has no code that builds this message
+ts_client,ours,M14,control message (MessageType control),not built,the client has no code that builds this message
+ts_client,ours,M15,control request for an out-of-band upload end-point,not built,the client has no code that builds this message
+ts_client,ours,M16,control message (field control=true),ok,
+ts_client,ours,M17,error case: a message without content,not built,the client has no code that builds this message
+ts_client,ours,M18,structured message in a programming language (COBOL),not built,the client has no code that builds this message
+ts_client,ours,M19,location/gps,not built,the client has no code that builds this message
+ts_client,ours,M20,text of 100 000 characters,ok,
+ours,nlip_server,M01,"text, English",ok,
+ours,nlip_server,M02,text with non-ASCII characters,ok,
+ours,nlip_server,M03,"text, French subformat",ok,
+ours,nlip_server,M04,"structured/json, nested content",ok,
+ours,nlip_server,M05,text with a binary (image) submessage,ok,
+ours,nlip_server,M06,"three submessages in order: text, structured/json, location/gps, with labels",ok,
+ours,nlip_server,M07,conversation token,ok,
+ours,nlip_server,M08,authentication token,ok,
+ours,nlip_server,M09,conversation and authentication token together,ok,
+ours,nlip_server,M10,token with a free subformat (group_7),ok,
+ours,nlip_server,M11,"conversation, turn 1 (token sent)",ok,
+ours,nlip_server,M12,"conversation, turn 2 (same token)",ok,
+ours,nlip_server,M13,"conversation, turn 3 (same token)",ok,
+ours,nlip_server,M14,control message (MessageType control),ok,
+ours,nlip_server,M15,control request for an out-of-band upload end-point,fail,no structured/uri submessage in the answer
+ours,nlip_server,M16,control message (field control=true),fail,answer does not carry control=true
+ours,nlip_server,M17,error case: a message without content,ok,
+ours,nlip_server,M18,structured message in a programming language (COBOL),fail,"answered with format 'structured', not text"
+ours,nlip_server,M19,location/gps,ok,
+ours,nlip_server,M20,text of 100 000 characters,ok,
+ours,ours,M01,"text, English",ok,
+ours,ours,M02,text with non-ASCII characters,ok,
+ours,ours,M03,"text, French subformat",ok,
+ours,ours,M04,"structured/json, nested content",ok,
+ours,ours,M05,text with a binary (image) submessage,ok,
+ours,ours,M06,"three submessages in order: text, structured/json, location/gps, with labels",ok,
+ours,ours,M07,conversation token,ok,
+ours,ours,M08,authentication token,ok,
+ours,ours,M09,conversation and authentication token together,ok,
+ours,ours,M10,token with a free subformat (group_7),ok,
+ours,ours,M11,"conversation, turn 1 (token sent)",ok,
+ours,ours,M12,"conversation, turn 2 (same token)",ok,
+ours,ours,M13,"conversation, turn 3 (same token)",ok,
+ours,ours,M14,control message (MessageType control),ok,
+ours,ours,M15,control request for an out-of-band upload end-point,ok,
+ours,ours,M16,control message (field control=true),ok,
+ours,ours,M17,error case: a message without content,ok,
+ours,ours,M18,structured message in a programming language (COBOL),ok,
+ours,ours,M19,location/gps,ok,
+ours,ours,M20,text of 100 000 characters,ok,

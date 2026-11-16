@@ -1,0 +1,35 @@
+# Stage 08 pilot, round A only (the matrix must not set allow_round_b):
+# 5 pilot intents per API at the current version, 1 behind and the oldest = 45 instances.
+#   Part A: R1-R4, P2, NLIP and NLIP-0                         = 45 x 4 x 2 = 360 sessions
+#   Part B: R1 and R3, P1 and P3, NLIP only, the 15 L3 instances = 15 x 2 x 2 =  60 sessions
+# Run with: uv run python -m nlipeval.runner.run --matrix config/runs/pilot.yaml
+# The session wall-time limit is per rung (config/models.yaml: session_limit_s).
+
+run_id: null
+label: pilot
+stage: stage8
+attempt: 1
+
+parts:
+  - name: A
+    task_filter:
+      apis: [L1, L2, L3]
+      pilot_round: A
+    rungs: [R1, R2, R3, R4]
+    prompts: [P2]
+    conditions: [NLIP, NLIP-0]
+  - name: B
+    task_filter:
+      apis: [L3]
+      pilot_round: A
+    rungs: [R1, R3]
+    prompts: [P1, P3]
+    conditions: [NLIP]
+
+concurrency:
+  R1: 1
+  R2: 8
+  R3: 8
+  R4: 8
+
+budget_calls: 20000

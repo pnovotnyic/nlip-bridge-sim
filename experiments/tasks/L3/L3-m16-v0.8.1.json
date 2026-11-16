@@ -1,0 +1,161 @@
+{
+  "schema_version": "1",
+  "task_id": "L3-m16-v0.8.1",
+  "intent_id": "m16",
+  "pilot": false,
+  "api": "L3",
+  "operation": "createSession",
+  "client_version": "v0.8.1",
+  "server_version": "v1.1.0",
+  "versions_behind": 5,
+  "breaking_crossed": 21,
+  "breaking_crossed_ops": 14,
+  "catalogue_breaking_crossed": 14,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Create a low-latency gaming session for the subscriber dev016@nlipeval.example to the game server at 198.51.100.20 for 15 minutes.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/qod/v0/sessions",
+    "body": {
+      "duration": 900,
+      "ueId": {
+        "externalId": "dev016@nlipeval.example"
+      },
+      "asId": {
+        "ipv4addr": "198.51.100.20"
+      },
+      "qos": "QOS_E"
+    }
+  },
+  "client_facts": [
+    {
+      "fact": "phone_number",
+      "value": "+9901000016"
+    }
+  ],
+  "client_answer_schema": {
+    "description": "v0.8.1 createSession response: id (UUID), startedAt/expiresAt Unix int, ueId, asId, qos, [duration]",
+    "type": "object",
+    "required": [
+      "id",
+      "startedAt",
+      "expiresAt"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "startedAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "expiresAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "ueId": {
+        "type": "object"
+      },
+      "asId": {
+        "type": "object"
+      },
+      "qos": {
+        "type": "string"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D16"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/quality-on-demand/v1/sessions",
+      "body": {
+        "duration": 900,
+        "device": {
+          "phoneNumber": "+9901000016"
+        },
+        "applicationServer": {
+          "ipv4Address": "198.51.100.20"
+        },
+        "qosProfile": "QOS_E"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/quality-on-demand/v1/sessions",
+      "body": {
+        "duration": 900,
+        "device": {
+          "phoneNumber": "+9901000016",
+          "networkAccessIdentifier": "dev016@nlipeval.example"
+        },
+        "applicationServer": {
+          "ipv4Address": "198.51.100.20"
+        },
+        "qosProfile": "QOS_E"
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 201,
+    "body": {
+      "applicationServer": {
+        "ipv4Address": "198.51.100.20"
+      },
+      "qosProfile": "QOS_E",
+      "sessionId": "338acc0b-5fb7-560f-8641-593eb6f0aa60",
+      "duration": 900,
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T12:15:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "duration": 900,
+      "asId": {
+        "ipv4addr": "198.51.100.20"
+      },
+      "qos": "QOS_E",
+      "id": "338acc0b-5fb7-560f-8641-593eb6f0aa60",
+      "startedAt": 1796126400,
+      "expiresAt": 1796127300
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [
+    "device.phoneNumber"
+  ],
+  "missing_info_source": {
+    "device.phoneNumber": "fact"
+  },
+  "change_tags_request": [
+    "renamed",
+    "restructured",
+    "unit_format",
+    "newly_required"
+  ],
+  "change_tags_response": [
+    "renamed",
+    "unit_format",
+    "newly_required"
+  ],
+  "material_fields": [
+    "operation",
+    "sessionId",
+    "device",
+    "applicationServer",
+    "qosProfile",
+    "duration"
+  ],
+  "provenance": "authored"
+}

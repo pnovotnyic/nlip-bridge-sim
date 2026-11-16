@@ -1,0 +1,103 @@
+{
+  "schema_version": "1",
+  "task_id": "L2-m16-v0.1.0",
+  "intent_id": "m16",
+  "pilot": false,
+  "api": "L2",
+  "operation": "verifyLocation",
+  "client_version": "v0.1.0",
+  "server_version": "v3.0.0",
+  "versions_behind": 4,
+  "breaking_crossed": 8,
+  "breaking_crossed_ops": 8,
+  "catalogue_breaking_crossed": 6,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Check if phone +9901000016 is within 2 km of 48.208, 16.379 in Vienna, using a fresh location reading.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/location/v0/verify",
+    "body": {
+      "ueId": {
+        "msisdn": "9901000016"
+      },
+      "latitude": 48.208,
+      "longitude": 16.379,
+      "accuracy": 2.0
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v0.1.0 response schema: verificationResult boolean",
+    "type": "object",
+    "required": [
+      "verificationResult"
+    ],
+    "properties": {
+      "verificationResult": {
+        "type": "boolean"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D16"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/location-verification/v3/verify",
+      "body": {
+        "device": {
+          "phoneNumber": "+9901000016"
+        },
+        "area": {
+          "areaType": "CIRCLE",
+          "center": {
+            "latitude": 48.208,
+            "longitude": 16.379
+          },
+          "radius": 2000
+        },
+        "maxAge": 0
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 422,
+    "body": {
+      "status": 422,
+      "code": "LOCATION_VERIFICATION.UNABLE_TO_FULFILL_MAX_AGE",
+      "message": "Unable to provide expected freshness for location"
+    }
+  },
+  "gold_client_answer": {
+    "status": "declined",
+    "result": null
+  },
+  "expected_refusal": {
+    "status": 422,
+    "code": "LOCATION_VERIFICATION.UNABLE_TO_FULFILL_MAX_AGE"
+  },
+  "refusal_predictable": false,
+  "missing_info": [
+    "maxAge"
+  ],
+  "missing_info_source": {
+    "maxAge": "intent_text"
+  },
+  "change_tags_request": [
+    "renamed",
+    "restructured",
+    "unit_format",
+    "newly_required"
+  ],
+  "change_tags_response": [],
+  "material_fields": [
+    "device",
+    "area.center.latitude",
+    "area.center.longitude",
+    "area.radius",
+    "maxAge"
+  ],
+  "provenance": "authored"
+}

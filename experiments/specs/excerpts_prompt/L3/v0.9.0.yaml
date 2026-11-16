@@ -1,0 +1,1139 @@
+openapi: 3.0.3
+info:
+  title: QoD for enhanced communication
+  version: 0.9.0
+paths:
+  /sessions:
+    post:
+      tags:
+      - QoS sessions
+      summary: Creates a new session
+      description: Create QoS Session to manage latency/throughput priorities
+      operationId: createSession
+      requestBody:
+        description: Parameters to create a new session
+        content:
+          application/json:
+            schema:
+              description: Attributes required to create a session
+              type: object
+              properties:
+                duration:
+                  description: "Session duration in seconds. Maximal value of 24 hours is used if not set.\nAfter session\
+                    \ is expired the, client will receive a `QOS_STATUS_CHANGED` event with \n - `qosStatus` as `UNAVAILABLE`,\
+                    \ and, \n - `statusInfo` as `DURATION_EXPIRED`. \nSee notification callback.\n"
+                  type: integer
+                  format: int32
+                  minimum: 1
+                  maximum: 86400
+                  default: 86400
+                device:
+                  description: "End-user equipment able to connect to a mobile network. Examples of devices include smartphones\
+                    \ or IoT sensors/actuators. \n\nThe developer can choose to provide the below specified device identifiers:\n\
+                    \n* `ipv4Address`\n* `ipv6Address`\n* `phoneNumber`\n* `networkAccessIdentifier`  \n\nNOTE: the MNO might\
+                    \ support only a subset of these options. The API invoker can provide multiple identifiers to be compatible\
+                    \ across different MNOs. In this case the identifiers MUST belong to the same device     \n"
+                  type: object
+                  properties:
+                    phoneNumber:
+                      description: A public identifier addressing a telephone subscription. In mobile networks it corresponds
+                        to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally
+                        unique it has to be formatted in international format, according to E.164 standard, optionally prefixed
+                        with '+'.
+                      type: string
+                      pattern: ^\+?[0-9]{5,15}$
+                    networkAccessIdentifier:
+                      description: A public identifier addressing a subscription in a mobile network. In 3GPP terminology,
+                        it corresponds to the GPSI formatted with the External Identifier ({Local Identifier}@{Domain Identifier}).
+                        Unlike the telephone number, the network access identifier is not subjected to portability ruling
+                        in force, and is individually managed by each operator.
+                      type: string
+                    ipv4Address:
+                      type: object
+                      description: 'The device should be identified by either the public (observed) IP address and port as
+                        seen by the application server, or the private (local) and any public (observed) IP addresses in use
+                        by the device (this information can be obtained by various means, for example from some DNS servers).
+
+
+                        If the allocated and observed IP addresses are the same (i.e. NAT is not in use) then  the same address
+                        should be specified for both publicAddress and privateAddress.
+
+
+                        If NAT64 is in use, the device should be identified by its publicAddress and publicPort, or separately
+                        by its allocated IPv6 address (field ipv6Address of the Device object)
+
+
+                        In all cases, publicAddress must be specified, along with at least one of either privateAddress or
+                        publicPort, dependent upon which is known. In general, mobile devices cannot be identified by their
+                        public IPv4 address alone.
+
+                        '
+                      properties:
+                        publicAddress:
+                          description: A single IPv4 address with no subnet mask
+                          type: string
+                          pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                        privateAddress:
+                          description: A single IPv4 address with no subnet mask
+                          type: string
+                          pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                        publicPort:
+                          description: TCP or UDP port number
+                          type: integer
+                          minimum: 0
+                          maximum: 65535
+                      anyOf:
+                      - required:
+                        - publicAddress
+                        - privateAddress
+                      - required:
+                        - publicAddress
+                        - publicPort
+                    ipv6Address:
+                      type: string
+                      allOf:
+                      - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                      - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                      description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask> as:\n\
+                        \  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                        \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                        \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                  minProperties: 1
+                applicationServer:
+                  description: "A server hosting backend applications to deliver some business logic to clients.\n\nThe developer\
+                    \ can choose to provide the below specified device identifiers:\n\n* `ipv4Address`\n* `ipv6Address` \n"
+                  type: object
+                  properties:
+                    ipv4Address:
+                      type: string
+                      pattern: ^([01]?\d\d?|2[0-4]\d|25[0-5])(?:\.(?:[01]?\d\d?|2[0-4]\d|25[0-5])){3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+                      description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                        \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n  - address/mask\
+                        \ - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this case, all IP numbers\
+                        \ from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the IP version.\n"
+                    ipv6Address:
+                      type: string
+                      allOf:
+                      - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                      - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                      description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask> as:\n\
+                        \  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                        \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                        \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                  minProperties: 1
+                devicePorts:
+                  allOf:
+                  - description: The ports used locally by the device for flows to which the requested QoS profile should
+                      apply. If omitted, then the qosProfile will apply to all flows between the device and the specified
+                      application server address and ports
+                  - type: object
+                    minProperties: 1
+                    properties:
+                      ranges:
+                        type: array
+                        minItems: 1
+                        items:
+                          type: object
+                          required:
+                          - from
+                          - to
+                          properties:
+                            from:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                            to:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                      ports:
+                        type: array
+                        minItems: 1
+                        items:
+                          description: TCP or UDP port number
+                          type: integer
+                          minimum: 0
+                          maximum: 65535
+                applicationServerPorts:
+                  allOf:
+                  - description: A list of single ports or port ranges on the application server
+                  - type: object
+                    minProperties: 1
+                    properties:
+                      ranges:
+                        type: array
+                        minItems: 1
+                        items:
+                          type: object
+                          required:
+                          - from
+                          - to
+                          properties:
+                            from:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                            to:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                      ports:
+                        type: array
+                        minItems: 1
+                        items:
+                          description: TCP or UDP port number
+                          type: integer
+                          minimum: 0
+                          maximum: 65535
+                qosProfile:
+                  description: "A unique name for identifying a specific QoS profile.\nThis may follow different formats depending\
+                    \ on the service providers implementation.\nSome options addresses:\n  - A UUID style string\n  - Support\
+                    \ for predefined profiles QOS_S, QOS_M, QOS_L, and QOS_E\n  - A searchable descriptive name\n"
+                  type: string
+                  minLength: 3
+                  maxLength: 256
+                  format: string
+                  pattern: ^[a-zA-Z0-9_.-]+$
+                webhook:
+                  type: object
+                  required:
+                  - notificationUrl
+                  properties:
+                    notificationUrl:
+                      type: string
+                      format: uri
+                      description: Allows asynchronous delivery of session related events
+                    notificationAuthToken:
+                      type: string
+                      minLength: 20
+                      maxLength: 256
+                      description: Authentication token for callback API
+              required:
+              - device
+              - applicationServer
+              - qosProfile
+        required: true
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                description: Session related information.
+                allOf:
+                - description: Attributes required to create a session
+                  type: object
+                  properties:
+                    duration:
+                      description: "Session duration in seconds. Maximal value of 24 hours is used if not set.\nAfter session\
+                        \ is expired the, client will receive a `QOS_STATUS_CHANGED` event with \n - `qosStatus` as `UNAVAILABLE`,\
+                        \ and, \n - `statusInfo` as `DURATION_EXPIRED`. \nSee notification callback.\n"
+                      type: integer
+                      format: int32
+                      minimum: 1
+                      maximum: 86400
+                      default: 86400
+                    device:
+                      description: "End-user equipment able to connect to a mobile network. Examples of devices include smartphones\
+                        \ or IoT sensors/actuators. \n\nThe developer can choose to provide the below specified device identifiers:\n\
+                        \n* `ipv4Address`\n* `ipv6Address`\n* `phoneNumber`\n* `networkAccessIdentifier`  \n\nNOTE: the MNO\
+                        \ might support only a subset of these options. The API invoker can provide multiple identifiers to\
+                        \ be compatible across different MNOs. In this case the identifiers MUST belong to the same device\
+                        \     \n"
+                      type: object
+                      properties:
+                        phoneNumber:
+                          description: A public identifier addressing a telephone subscription. In mobile networks it corresponds
+                            to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally
+                            unique it has to be formatted in international format, according to E.164 standard, optionally
+                            prefixed with '+'.
+                          type: string
+                          pattern: ^\+?[0-9]{5,15}$
+                        networkAccessIdentifier:
+                          description: A public identifier addressing a subscription in a mobile network. In 3GPP terminology,
+                            it corresponds to the GPSI formatted with the External Identifier ({Local Identifier}@{Domain
+                            Identifier}). Unlike the telephone number, the network access identifier is not subjected to portability
+                            ruling in force, and is individually managed by each operator.
+                          type: string
+                        ipv4Address:
+                          type: object
+                          description: 'The device should be identified by either the public (observed) IP address and port
+                            as seen by the application server, or the private (local) and any public (observed) IP addresses
+                            in use by the device (this information can be obtained by various means, for example from some
+                            DNS servers).
+
+
+                            If the allocated and observed IP addresses are the same (i.e. NAT is not in use) then  the same
+                            address should be specified for both publicAddress and privateAddress.
+
+
+                            If NAT64 is in use, the device should be identified by its publicAddress and publicPort, or separately
+                            by its allocated IPv6 address (field ipv6Address of the Device object)
+
+
+                            In all cases, publicAddress must be specified, along with at least one of either privateAddress
+                            or publicPort, dependent upon which is known. In general, mobile devices cannot be identified
+                            by their public IPv4 address alone.
+
+                            '
+                          properties:
+                            publicAddress:
+                              description: A single IPv4 address with no subnet mask
+                              type: string
+                              pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                            privateAddress:
+                              description: A single IPv4 address with no subnet mask
+                              type: string
+                              pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                            publicPort:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                          anyOf:
+                          - required:
+                            - publicAddress
+                            - privateAddress
+                          - required:
+                            - publicAddress
+                            - publicPort
+                        ipv6Address:
+                          type: string
+                          allOf:
+                          - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                          - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                          description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask>\
+                            \ as:\n  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                            \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                            \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                      minProperties: 1
+                    applicationServer:
+                      description: "A server hosting backend applications to deliver some business logic to clients.\n\nThe\
+                        \ developer can choose to provide the below specified device identifiers:\n\n* `ipv4Address`\n* `ipv6Address`\
+                        \ \n"
+                      type: object
+                      properties:
+                        ipv4Address:
+                          type: string
+                          pattern: ^([01]?\d\d?|2[0-4]\d|25[0-5])(?:\.(?:[01]?\d\d?|2[0-4]\d|25[0-5])){3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+                          description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                            \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n \
+                            \ - address/mask - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this\
+                            \ case, all IP numbers from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the\
+                            \ IP version.\n"
+                        ipv6Address:
+                          type: string
+                          allOf:
+                          - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                          - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                          description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask>\
+                            \ as:\n  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                            \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                            \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                      minProperties: 1
+                    devicePorts:
+                      allOf:
+                      - description: The ports used locally by the device for flows to which the requested QoS profile should
+                          apply. If omitted, then the qosProfile will apply to all flows between the device and the specified
+                          application server address and ports
+                      - type: object
+                        minProperties: 1
+                        properties:
+                          ranges:
+                            type: array
+                            minItems: 1
+                            items:
+                              type: object
+                              required:
+                              - from
+                              - to
+                              properties:
+                                from:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                                to:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                          ports:
+                            type: array
+                            minItems: 1
+                            items:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                    applicationServerPorts:
+                      allOf:
+                      - description: A list of single ports or port ranges on the application server
+                      - type: object
+                        minProperties: 1
+                        properties:
+                          ranges:
+                            type: array
+                            minItems: 1
+                            items:
+                              type: object
+                              required:
+                              - from
+                              - to
+                              properties:
+                                from:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                                to:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                          ports:
+                            type: array
+                            minItems: 1
+                            items:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                    qosProfile:
+                      description: "A unique name for identifying a specific QoS profile.\nThis may follow different formats\
+                        \ depending on the service providers implementation.\nSome options addresses:\n  - A UUID style string\n\
+                        \  - Support for predefined profiles QOS_S, QOS_M, QOS_L, and QOS_E\n  - A searchable descriptive\
+                        \ name\n"
+                      type: string
+                      minLength: 3
+                      maxLength: 256
+                      format: string
+                      pattern: ^[a-zA-Z0-9_.-]+$
+                    webhook:
+                      type: object
+                      required:
+                      - notificationUrl
+                      properties:
+                        notificationUrl:
+                          type: string
+                          format: uri
+                          description: Allows asynchronous delivery of session related events
+                        notificationAuthToken:
+                          type: string
+                          minLength: 20
+                          maxLength: 256
+                          description: Authentication token for callback API
+                  required:
+                  - device
+                  - applicationServer
+                  - qosProfile
+                - type: object
+                  properties:
+                    sessionId:
+                      description: Session ID in UUID format
+                      type: string
+                      format: uuid
+                    startedAt:
+                      type: integer
+                      description: Timestamp of session start in seconds since Unix epoch
+                      format: int64
+                    expiresAt:
+                      type: integer
+                      description: Timestamp of session expiration if the session was not deleted, in seconds since Unix epoch
+                      format: int64
+                    qosStatus:
+                      description: 'The current status of the requested QoS session. The status can be one of the following:
+
+                        * `REQUESTED` - QoS has been requested by creating a session
+
+                        * `AVAILABLE` - The requested QoS has been provided by the network
+
+                        * `UNAVAILABLE` - The requested QoS cannot be provided by the network due to some reason
+
+                        '
+                      type: string
+                      enum:
+                      - REQUESTED
+                      - AVAILABLE
+                      - UNAVAILABLE
+                    messages:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          severity:
+                            description: Message severity
+                            type: string
+                            enum:
+                            - INFO
+                            - WARNING
+                          description:
+                            description: Detailed message text
+                            type: string
+                        required:
+                        - severity
+                        - description
+                  required:
+                  - sessionId
+                  - duration
+                  - startedAt
+                  - expiresAt
+                  - qosStatus
+        '400':
+          description: Invalid input for createSession operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '501':
+          description: Not Implemented
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+      callbacks:
+        notifications:
+          '{$request.body#/webhook/notificationUrl}':
+            post:
+              summary: Session notifications callback
+  /sessions/{sessionId}:
+    get:
+      tags:
+      - QoS sessions
+      summary: Get QoS session information
+      description: Querying for QoS session resource information details
+      operationId: getSession
+      parameters:
+      - name: sessionId
+        in: path
+        description: Session ID that was obtained from the createSession operation
+        required: true
+        schema:
+          description: Session ID in UUID format
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Contains information about active session
+          content:
+            application/json:
+              schema:
+                description: Session related information.
+                allOf:
+                - description: Attributes required to create a session
+                  type: object
+                  properties:
+                    duration:
+                      description: "Session duration in seconds. Maximal value of 24 hours is used if not set.\nAfter session\
+                        \ is expired the, client will receive a `QOS_STATUS_CHANGED` event with \n - `qosStatus` as `UNAVAILABLE`,\
+                        \ and, \n - `statusInfo` as `DURATION_EXPIRED`. \nSee notification callback.\n"
+                      type: integer
+                      format: int32
+                      minimum: 1
+                      maximum: 86400
+                      default: 86400
+                    device:
+                      description: "End-user equipment able to connect to a mobile network. Examples of devices include smartphones\
+                        \ or IoT sensors/actuators. \n\nThe developer can choose to provide the below specified device identifiers:\n\
+                        \n* `ipv4Address`\n* `ipv6Address`\n* `phoneNumber`\n* `networkAccessIdentifier`  \n\nNOTE: the MNO\
+                        \ might support only a subset of these options. The API invoker can provide multiple identifiers to\
+                        \ be compatible across different MNOs. In this case the identifiers MUST belong to the same device\
+                        \     \n"
+                      type: object
+                      properties:
+                        phoneNumber:
+                          description: A public identifier addressing a telephone subscription. In mobile networks it corresponds
+                            to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally
+                            unique it has to be formatted in international format, according to E.164 standard, optionally
+                            prefixed with '+'.
+                          type: string
+                          pattern: ^\+?[0-9]{5,15}$
+                        networkAccessIdentifier:
+                          description: A public identifier addressing a subscription in a mobile network. In 3GPP terminology,
+                            it corresponds to the GPSI formatted with the External Identifier ({Local Identifier}@{Domain
+                            Identifier}). Unlike the telephone number, the network access identifier is not subjected to portability
+                            ruling in force, and is individually managed by each operator.
+                          type: string
+                        ipv4Address:
+                          type: object
+                          description: 'The device should be identified by either the public (observed) IP address and port
+                            as seen by the application server, or the private (local) and any public (observed) IP addresses
+                            in use by the device (this information can be obtained by various means, for example from some
+                            DNS servers).
+
+
+                            If the allocated and observed IP addresses are the same (i.e. NAT is not in use) then  the same
+                            address should be specified for both publicAddress and privateAddress.
+
+
+                            If NAT64 is in use, the device should be identified by its publicAddress and publicPort, or separately
+                            by its allocated IPv6 address (field ipv6Address of the Device object)
+
+
+                            In all cases, publicAddress must be specified, along with at least one of either privateAddress
+                            or publicPort, dependent upon which is known. In general, mobile devices cannot be identified
+                            by their public IPv4 address alone.
+
+                            '
+                          properties:
+                            publicAddress:
+                              description: A single IPv4 address with no subnet mask
+                              type: string
+                              pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                            privateAddress:
+                              description: A single IPv4 address with no subnet mask
+                              type: string
+                              pattern: ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                            publicPort:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                          anyOf:
+                          - required:
+                            - publicAddress
+                            - privateAddress
+                          - required:
+                            - publicAddress
+                            - publicPort
+                        ipv6Address:
+                          type: string
+                          allOf:
+                          - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                          - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                          description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask>\
+                            \ as:\n  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                            \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                            \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                      minProperties: 1
+                    applicationServer:
+                      description: "A server hosting backend applications to deliver some business logic to clients.\n\nThe\
+                        \ developer can choose to provide the below specified device identifiers:\n\n* `ipv4Address`\n* `ipv6Address`\
+                        \ \n"
+                      type: object
+                      properties:
+                        ipv4Address:
+                          type: string
+                          pattern: ^([01]?\d\d?|2[0-4]\d|25[0-5])(?:\.(?:[01]?\d\d?|2[0-4]\d|25[0-5])){3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+                          description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                            \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n \
+                            \ - address/mask - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this\
+                            \ case, all IP numbers from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the\
+                            \ IP version.\n"
+                        ipv6Address:
+                          type: string
+                          allOf:
+                          - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                          - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                          description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask>\
+                            \ as:\n  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                            \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                            \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                      minProperties: 1
+                    devicePorts:
+                      allOf:
+                      - description: The ports used locally by the device for flows to which the requested QoS profile should
+                          apply. If omitted, then the qosProfile will apply to all flows between the device and the specified
+                          application server address and ports
+                      - type: object
+                        minProperties: 1
+                        properties:
+                          ranges:
+                            type: array
+                            minItems: 1
+                            items:
+                              type: object
+                              required:
+                              - from
+                              - to
+                              properties:
+                                from:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                                to:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                          ports:
+                            type: array
+                            minItems: 1
+                            items:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                    applicationServerPorts:
+                      allOf:
+                      - description: A list of single ports or port ranges on the application server
+                      - type: object
+                        minProperties: 1
+                        properties:
+                          ranges:
+                            type: array
+                            minItems: 1
+                            items:
+                              type: object
+                              required:
+                              - from
+                              - to
+                              properties:
+                                from:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                                to:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                          ports:
+                            type: array
+                            minItems: 1
+                            items:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                    qosProfile:
+                      description: "A unique name for identifying a specific QoS profile.\nThis may follow different formats\
+                        \ depending on the service providers implementation.\nSome options addresses:\n  - A UUID style string\n\
+                        \  - Support for predefined profiles QOS_S, QOS_M, QOS_L, and QOS_E\n  - A searchable descriptive\
+                        \ name\n"
+                      type: string
+                      minLength: 3
+                      maxLength: 256
+                      format: string
+                      pattern: ^[a-zA-Z0-9_.-]+$
+                    webhook:
+                      type: object
+                      required:
+                      - notificationUrl
+                      properties:
+                        notificationUrl:
+                          type: string
+                          format: uri
+                          description: Allows asynchronous delivery of session related events
+                        notificationAuthToken:
+                          type: string
+                          minLength: 20
+                          maxLength: 256
+                          description: Authentication token for callback API
+                  required:
+                  - device
+                  - applicationServer
+                  - qosProfile
+                - type: object
+                  properties:
+                    sessionId:
+                      description: Session ID in UUID format
+                      type: string
+                      format: uuid
+                    startedAt:
+                      type: integer
+                      description: Timestamp of session start in seconds since Unix epoch
+                      format: int64
+                    expiresAt:
+                      type: integer
+                      description: Timestamp of session expiration if the session was not deleted, in seconds since Unix epoch
+                      format: int64
+                    qosStatus:
+                      description: 'The current status of the requested QoS session. The status can be one of the following:
+
+                        * `REQUESTED` - QoS has been requested by creating a session
+
+                        * `AVAILABLE` - The requested QoS has been provided by the network
+
+                        * `UNAVAILABLE` - The requested QoS cannot be provided by the network due to some reason
+
+                        '
+                      type: string
+                      enum:
+                      - REQUESTED
+                      - AVAILABLE
+                      - UNAVAILABLE
+                    messages:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          severity:
+                            description: Message severity
+                            type: string
+                            enum:
+                            - INFO
+                            - WARNING
+                          description:
+                            description: Detailed message text
+                            type: string
+                        required:
+                        - severity
+                        - description
+                  required:
+                  - sessionId
+                  - duration
+                  - startedAt
+                  - expiresAt
+                  - qosStatus
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+    delete:
+      tags:
+      - QoS sessions
+      summary: Delete a QoS session
+      description: Free resources related to QoS session
+      operationId: deleteSession
+      parameters:
+      - name: sessionId
+        in: path
+        description: Session ID that was obtained from the createSession operation
+        required: true
+        schema:
+          description: Session ID in UUID format
+          type: string
+          format: uuid
+      responses:
+        '204':
+          description: Session deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: HTTP status code returned along with this error response
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+                required:
+                - status
+                - code
+                - message
+servers:
+- url: '{apiRoot}/{basePath}'
+  variables:
+    apiRoot:
+      default: http://localhost:9091
+      description: API root
+    basePath:
+      default: qod/v0
+      description: Base path for the QoD API

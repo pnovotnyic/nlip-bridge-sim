@@ -1,0 +1,89 @@
+{
+  "schema_version": "1",
+  "task_id": "L1-m28-v0.5.1",
+  "intent_id": "m28",
+  "pilot": false,
+  "api": "L1",
+  "operation": "retrieveReachability",
+  "client_version": "v0.5.1",
+  "server_version": "v1.0.0",
+  "versions_behind": 2,
+  "breaking_crossed": 8,
+  "breaking_crossed_ops": 3,
+  "catalogue_breaking_crossed": 3,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Is the device with IPv6 address 2001:db8:a:1c::1 reachable?",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/device-status/v0/connectivity",
+    "body": {
+      "device": {
+        "ipv6Address": "2001:db8:a:1c::1"
+      }
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v0.5.1 response schema: connectivityStatus enum",
+    "type": "object",
+    "required": [
+      "connectivityStatus"
+    ],
+    "properties": {
+      "connectivityStatus": {
+        "type": "string",
+        "enum": [
+          "CONNECTED_DATA",
+          "CONNECTED_SMS",
+          "NOT_CONNECTED"
+        ]
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D28"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/device-reachability-status/v1/retrieve",
+      "body": {
+        "device": {
+          "ipv6Address": "2001:db8:a:1c::1"
+        }
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 200,
+    "body": {
+      "lastStatusTime": "2026-12-01T11:55:00Z",
+      "reachable": true,
+      "connectivity": [
+        "SMS"
+      ]
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "connectivityStatus": "CONNECTED_SMS"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [
+    "renamed"
+  ],
+  "change_tags_response": [
+    "renamed",
+    "restructured"
+  ],
+  "material_fields": [
+    "device"
+  ],
+  "provenance": "authored"
+}

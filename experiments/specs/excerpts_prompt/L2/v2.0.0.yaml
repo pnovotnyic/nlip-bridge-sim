@@ -1,0 +1,421 @@
+openapi: 3.0.3
+info:
+  title: Device Location Verification
+  version: 2.0.0
+paths:
+  /verify:
+    post:
+      tags:
+      - Location verification
+      summary: Verify the location of a device
+      description: 'Verify whether the location of a device is within a requested area. The operation returns a verification
+        result and, optionally, a match rate estimation for the location verification in percent.
+
+        '
+      operationId: verifyLocation
+      parameters:
+      - name: x-correlator
+        in: header
+        description: Correlation id for the different services
+        schema:
+          type: string
+          pattern: ^[a-zA-Z0-9-]{0,55}$
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              description: Request to verify the location of a device. Device is not required when using a 3-legged access
+                token, following the rules in the description.
+              type: object
+              properties:
+                device:
+                  description: 'End-user device able to connect to a mobile network. Examples of devices include smartphones
+                    or IoT sensors/actuators.
+
+
+                    The developer can choose to provide the below specified device identifiers:
+
+
+                    * `ipv4Address`
+
+                    * `ipv6Address`
+
+                    * `phoneNumber`
+
+                    * `networkAccessIdentifier`
+
+
+                    NOTE1: the API provider might support only a subset of these options. The API consumer can provide multiple
+                    identifiers to be compatible across different API providers. In this case the identifiers MUST belong
+                    to the same device
+
+                    NOTE2: as for this Commonalities release, we are enforcing that the networkAccessIdentifier is only part
+                    of the schema for future-proofing, and CAMARA does not currently allow its use. After the CAMARA meta-release
+                    work is concluded and the relevant issues are resolved, its use will need to be explicitly documented
+                    in the guidelines.
+
+                    '
+                  type: object
+                  properties:
+                    phoneNumber:
+                      description: A public identifier addressing a telephone subscription. In mobile networks it corresponds
+                        to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally
+                        unique it has to be formatted in international format, according to E.164 standard, prefixed with
+                        '+'.
+                      type: string
+                      pattern: ^\+[1-9][0-9]{4,14}$
+                    networkAccessIdentifier:
+                      description: A public identifier addressing a subscription in a mobile network. In 3GPP terminology,
+                        it corresponds to the GPSI formatted with the External Identifier ({Local Identifier}@{Domain Identifier}).
+                        Unlike the telephone number, the network access identifier is not subjected to portability ruling
+                        in force, and is individually managed by each operator.
+                      type: string
+                    ipv4Address:
+                      type: object
+                      description: 'The device should be identified by either the public (observed) IP address and port as
+                        seen by the application server, or the private (local) and any public (observed) IP addresses in use
+                        by the device (this information can be obtained by various means, for example from some DNS servers).
+
+
+                        If the allocated and observed IP addresses are the same (i.e. NAT is not in use) then  the same address
+                        should be specified for both publicAddress and privateAddress.
+
+
+                        If NAT64 is in use, the device should be identified by its publicAddress and publicPort, or separately
+                        by its allocated IPv6 address (field ipv6Address of the Device object)
+
+
+                        In all cases, publicAddress must be specified, along with at least one of either privateAddress or
+                        publicPort, dependent upon which is known. In general, mobile devices cannot be identified by their
+                        public IPv4 address alone.
+
+                        '
+                      properties:
+                        publicAddress:
+                          description: A single IPv4 address with no subnet mask
+                          type: string
+                          format: ipv4
+                        privateAddress:
+                          description: A single IPv4 address with no subnet mask
+                          type: string
+                          format: ipv4
+                        publicPort:
+                          description: TCP or UDP port number
+                          type: integer
+                          minimum: 0
+                          maximum: 65535
+                      anyOf:
+                      - required:
+                        - publicAddress
+                        - privateAddress
+                      - required:
+                        - publicAddress
+                        - publicPort
+                    ipv6Address:
+                      description: 'The device should be identified by the observed IPv6 address, or by any single IPv6 address
+                        from within the subnet allocated to the device (e.g. adding ::0 to the /64 prefix).
+
+                        '
+                      type: string
+                      format: ipv6
+                  minProperties: 1
+                area:
+                  description: Base schema for all areas
+                  type: object
+                  properties:
+                    areaType:
+                      type: string
+                      description: 'Type of this area.
+
+                        CIRCLE - The area is defined as a circle.
+
+                        '
+                      enum:
+                      - CIRCLE
+                  required:
+                  - areaType
+                  discriminator:
+                    propertyName: areaType
+                    mapping:
+                      CIRCLE: '#/components/schemas/Circle'
+                  x-discriminator-subtypes:
+                    CIRCLE:
+                      description: Circular area
+                      allOf:
+                      - type: object
+                        properties:
+                          center:
+                            type: object
+                            description: Coordinates (latitude, longitude) defining a location in a map
+                            required:
+                            - latitude
+                            - longitude
+                            properties:
+                              latitude:
+                                description: Latitude component of a location
+                                type: number
+                                format: double
+                                minimum: -90
+                                maximum: 90
+                              longitude:
+                                description: Longitude component of location
+                                type: number
+                                format: double
+                                minimum: -180
+                                maximum: 180
+                          radius:
+                            type: integer
+                            description: 'Expected accuracy for the verification, in meters from `center`.
+
+                              Note: The area surface could be restricted locally depending on regulations. Implementations
+                              may enforce a larger minimum radius (e.g. 1000 meters).
+
+                              '
+                            minimum: 1
+                            maximum: 200000
+                        required:
+                        - center
+                        - radius
+                maxAge:
+                  description: The maximum age (in seconds) for the location known by the implementation, which is accepted
+                    for the verification. Absence of maxAge means "any age" and maxAge=0 means a fresh calculation.
+                  type: integer
+              required:
+              - area
+      responses:
+        '200':
+          description: Location verification result
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                description: Response to a location verification request
+                type: object
+                required:
+                - verificationResult
+                properties:
+                  lastLocationTime:
+                    description: Timestamp of the last location information. It must follow RFC 3339 and must have time zone.
+                      Recommended format is yyyy-MM-dd'T'HH:mm:ss.SSSZ (i.e. which allows 2023-07-03T14:27:08.312+02:00 or
+                      2023-07-03T12:27:08.312Z)
+                    format: date-time
+                    type: string
+                  verificationResult:
+                    description: "Result of a verification request:\n  - `TRUE`: when the network locates the device within\
+                      \ the requested area,\n  - `FALSE`: when the requested area does not match the area where the network\
+                      \ locates the device,\n  - `UNKNOWN`: when the network cannot locate the device,\n  - `PARTIAL`: when\
+                      \ the requested area partially match the area where the network locates the device. A `match_rate` is\
+                      \ included in the response.\n"
+                    type: string
+                    enum:
+                    - 'TRUE'
+                    - 'FALSE'
+                    - UNKNOWN
+                    - PARTIAL
+                  matchRate:
+                    description: Estimation of the match rate between the area in the request (R), and area where the network
+                      locates the device (N), calculated as the percent value of the intersection of both areas divided by
+                      the network area, that is (R ∩ N) / N * 100. Included only if VerificationResult is PARTIAL.
+                    type: integer
+                    minimum: 1
+                    maximum: 99
+        '400':
+          description: Bad Request
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  required:
+                  - status
+                  - code
+                  - message
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 400
+                    code:
+                      enum:
+                      - INVALID_ARGUMENT
+                      - OUT_OF_RANGE
+        '401':
+          description: Unauthorized
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  required:
+                  - status
+                  - code
+                  - message
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 401
+                    code:
+                      enum:
+                      - UNAUTHENTICATED
+        '403':
+          description: Forbidden
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  required:
+                  - status
+                  - code
+                  - message
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 403
+                    code:
+                      enum:
+                      - PERMISSION_DENIED
+        '404':
+          description: Not found
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  required:
+                  - status
+                  - code
+                  - message
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 404
+                    code:
+                      enum:
+                      - IDENTIFIER_NOT_FOUND
+        '422':
+          description: Unprocessable Content
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  required:
+                  - status
+                  - code
+                  - message
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 422
+                    code:
+                      enum:
+                      - IDENTIFIER_MISMATCH
+                      - SERVICE_NOT_APPLICABLE
+                      - MISSING_IDENTIFIER
+                      - UNSUPPORTED_IDENTIFIER
+                      - UNNECESSARY_IDENTIFIER
+                      - LOCATION_VERIFICATION.AREA_NOT_COVERED
+                      - LOCATION_VERIFICATION.INVALID_AREA
+                      - LOCATION_VERIFICATION.UNABLE_TO_FULFILL_MAX_AGE
+servers:
+- url: '{apiRoot}/location-verification/v2'
+  variables:
+    apiRoot:
+      default: http://localhost:9091
+      description: API root

@@ -1,0 +1,98 @@
+{
+  "schema_version": "1",
+  "task_id": "L2-m28-v0.1.0",
+  "intent_id": "m28",
+  "pilot": false,
+  "api": "L2",
+  "operation": "verifyLocation",
+  "client_version": "v0.1.0",
+  "server_version": "v3.0.0",
+  "versions_behind": 4,
+  "breaking_crossed": 8,
+  "breaking_crossed_ops": 8,
+  "catalogue_breaking_crossed": 7,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Is the device with IPv6 2001:db8:a:1c::1 within 2 km of 50.071, 14.449 in Prague?",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/location/v0/verify",
+    "body": {
+      "ueId": {
+        "ipv6Addr": "2001:db8:a:1c::1"
+      },
+      "latitude": 50.071,
+      "longitude": 14.449,
+      "accuracy": 2.0
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v0.1.0 response schema: verificationResult boolean",
+    "type": "object",
+    "required": [
+      "verificationResult"
+    ],
+    "properties": {
+      "verificationResult": {
+        "type": "boolean"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D28"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/location-verification/v3/verify",
+      "body": {
+        "device": {
+          "ipv6Address": "2001:db8:a:1c::1"
+        },
+        "area": {
+          "areaType": "CIRCLE",
+          "center": {
+            "latitude": 50.071,
+            "longitude": 14.449
+          },
+          "radius": 2000
+        }
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 200,
+    "body": {
+      "verificationResult": "PARTIAL",
+      "lastLocationTime": "2026-12-01T11:00:00Z",
+      "matchRate": 64
+    }
+  },
+  "gold_client_answer": {
+    "status": "unrepresentable",
+    "result": null
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [
+    "renamed",
+    "restructured",
+    "unit_format",
+    "newly_required"
+  ],
+  "change_tags_response": [
+    "unit_format",
+    "changed_meaning"
+  ],
+  "material_fields": [
+    "device",
+    "area.center.latitude",
+    "area.center.longitude",
+    "area.radius",
+    "maxAge"
+  ],
+  "provenance": "authored"
+}

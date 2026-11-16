@@ -1,0 +1,63 @@
+{
+ "gold_status": {
+  "L1|stage2|declined": 2,
+  "L1|stage2|done": 28,
+  "L1|stage3|declined": 4,
+  "L1|stage3|done": 56,
+  "L2|stage2|declined": 7,
+  "L2|stage2|done": 23,
+  "L2|stage3|declined": 16,
+  "L2|stage3|done": 92,
+  "L2|stage3|unrepresentable": 12,
+  "L3|stage2|declined": 2,
+  "L3|stage2|done": 28,
+  "L3|stage3|declined": 10,
+  "L3|stage3|done": 140
+ },
+ "missing_info_share": {
+  "L1|v0.5.1": "0/30",
+  "L1|v0.6.0": "0/30",
+  "L1|v1.0.0": "0/30",
+  "L2|v0.1.0": "30/30",
+  "L2|v0.2.0": "0/30",
+  "L2|v1.0.0": "0/30",
+  "L2|v2.0.0": "0/30",
+  "L2|v3.0.0": "0/30",
+  "L3|v0.10.0": "0/30",
+  "L3|v0.11.0": "0/30",
+  "L3|v0.8.1": "7/30",
+  "L3|v0.9.0": "0/30",
+  "L3|v1.0.0": "0/30",
+  "L3|v1.1.0": "0/30"
+ },
+ "coverage_either": {
+  "L1|renamed": 30,
+  "L1|restructured": 60,
+  "L1|unit_format": 10,
+  "L2|changed_meaning": 30,
+  "L2|newly_required": 103,
+  "L2|renamed": 20,
+  "L2|restructured": 30,
+  "L2|unit_format": 40,
+  "L3|changed_meaning": 8,
+  "L3|newly_required": 66,
+  "L3|renamed": 42,
+  "L3|restructured": 30,
+  "L3|unit_format": 82
+ },
+ "prompt_half": {
+  "L1|renamed": 15,
+  "L1|restructured": 30,
+  "L1|unit_format": 5,
+  "L2|changed_meaning": 15,
+  "L2|newly_required": 50,
+  "L2|renamed": 11,
+  "L2|restructured": 15,
+  "L2|unit_format": 20,
+  "L3|changed_meaning": 4,
+  "L3|newly_required": 33,
+  "L3|renamed": 21,
+  "L3|restructured": 14,
+  "L3|unit_format": 41
+ }
+}

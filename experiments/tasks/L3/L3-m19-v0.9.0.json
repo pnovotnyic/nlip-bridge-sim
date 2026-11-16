@@ -1,0 +1,156 @@
+{
+  "schema_version": "1",
+  "task_id": "L3-m19-v0.9.0",
+  "intent_id": "m19",
+  "pilot": false,
+  "api": "L3",
+  "operation": "createSession",
+  "client_version": "v0.9.0",
+  "server_version": "v1.1.0",
+  "versions_behind": 4,
+  "breaking_crossed": 17,
+  "breaking_crossed_ops": 11,
+  "catalogue_breaking_crossed": 6,
+  "prompt_half": true,
+  "pilot_round": null,
+  "intent_text": "Set up a low-latency gaming session for the device with IPv6 2001:db8:a:13::1 to 198.51.100.20 for 10 minutes, with notifications to https://app.example.org/notify/game.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/qod/v0/sessions",
+    "body": {
+      "duration": 600,
+      "device": {
+        "ipv6Address": "2001:db8:a:13::1"
+      },
+      "applicationServer": {
+        "ipv4Address": "198.51.100.20"
+      },
+      "qosProfile": "QOS_E",
+      "webhook": {
+        "notificationUrl": "https://app.example.org/notify/game"
+      }
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v0.9.0 createSession: sessionId, device, applicationServer, qosProfile, startedAt/expiresAt Unix int, qosStatus",
+    "type": "object",
+    "required": [
+      "sessionId",
+      "startedAt",
+      "expiresAt",
+      "qosStatus"
+    ],
+    "properties": {
+      "sessionId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "startedAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "expiresAt": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "device": {
+        "type": "object"
+      },
+      "applicationServer": {
+        "type": "object"
+      },
+      "qosProfile": {
+        "type": "string"
+      },
+      "qosStatus": {
+        "type": "string",
+        "enum": [
+          "REQUESTED",
+          "AVAILABLE",
+          "UNAVAILABLE"
+        ]
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D19"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/quality-on-demand/v1/sessions",
+      "body": {
+        "duration": 600,
+        "device": {
+          "ipv6Address": "2001:db8:a:13::1"
+        },
+        "applicationServer": {
+          "ipv4Address": "198.51.100.20"
+        },
+        "qosProfile": "QOS_E",
+        "sink": "https://app.example.org/notify/game"
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 201,
+    "body": {
+      "applicationServer": {
+        "ipv4Address": "198.51.100.20"
+      },
+      "qosProfile": "QOS_E",
+      "sink": "https://app.example.org/notify/game",
+      "sessionId": "a4639881-8ca7-55a6-80db-b7889355082c",
+      "duration": 600,
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T12:10:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "duration": 600,
+      "applicationServer": {
+        "ipv4Address": "198.51.100.20"
+      },
+      "qosProfile": "QOS_E",
+      "sessionId": "a4639881-8ca7-55a6-80db-b7889355082c",
+      "webhook": {
+        "notificationUrl": "https://app.example.org/notify/game"
+      },
+      "startedAt": 1796126400,
+      "expiresAt": 1796127000,
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [
+    "renamed",
+    "restructured",
+    "unit_format",
+    "newly_required"
+  ],
+  "change_tags_response": [
+    "renamed",
+    "restructured",
+    "unit_format",
+    "newly_required"
+  ],
+  "material_fields": [
+    "operation",
+    "sessionId",
+    "device",
+    "applicationServer",
+    "qosProfile",
+    "duration"
+  ],
+  "provenance": "authored"
+}

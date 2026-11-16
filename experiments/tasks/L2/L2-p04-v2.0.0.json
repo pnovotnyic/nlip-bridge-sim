@@ -1,0 +1,114 @@
+{
+  "schema_version": "1",
+  "task_id": "L2-p04-v2.0.0",
+  "intent_id": "p04",
+  "pilot": true,
+  "api": "L2",
+  "operation": "verifyLocation",
+  "client_version": "v2.0.0",
+  "server_version": "v3.0.0",
+  "versions_behind": 1,
+  "breaking_crossed": 0,
+  "breaking_crossed_ops": 0,
+  "catalogue_breaking_crossed": 1,
+  "prompt_half": false,
+  "pilot_round": "A",
+  "intent_text": "Check if phone +9901000016 is within 2 km of 48.208, 16.379 in Vienna.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/location-verification/v2/verify",
+    "body": {
+      "device": {
+        "phoneNumber": "+9901000016"
+      },
+      "area": {
+        "areaType": "CIRCLE",
+        "center": {
+          "latitude": 48.208,
+          "longitude": 16.379
+        },
+        "radius": 2000
+      }
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v2.0.0 response schema: verificationResult string enum, optional lastLocationTime and matchRate",
+    "type": "object",
+    "required": [
+      "verificationResult"
+    ],
+    "properties": {
+      "verificationResult": {
+        "type": "string",
+        "enum": [
+          true,
+          false,
+          "PARTIAL",
+          "UNKNOWN"
+        ]
+      },
+      "lastLocationTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "matchRate": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 99
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D16"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/location-verification/v3/verify",
+      "body": {
+        "device": {
+          "phoneNumber": "+9901000016"
+        },
+        "area": {
+          "areaType": "CIRCLE",
+          "center": {
+            "latitude": 48.208,
+            "longitude": 16.379
+          },
+          "radius": 2000
+        }
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 200,
+    "body": {
+      "verificationResult": "TRUE",
+      "lastLocationTime": "2026-12-01T11:00:00Z"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "verificationResult": "TRUE",
+      "lastLocationTime": "2026-12-01T11:00:00Z"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [],
+  "change_tags_response": [
+    "newly_required"
+  ],
+  "material_fields": [
+    "device",
+    "area.center.latitude",
+    "area.center.longitude",
+    "area.radius",
+    "maxAge"
+  ],
+  "provenance": "authored"
+}

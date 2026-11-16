@@ -1,0 +1,121 @@
+{
+  "schema_version": "1",
+  "task_id": "L2-m02-v3.0.0",
+  "intent_id": "m02",
+  "pilot": false,
+  "api": "L2",
+  "operation": "verifyLocation",
+  "client_version": "v3.0.0",
+  "server_version": "v3.0.0",
+  "versions_behind": 0,
+  "breaking_crossed": 0,
+  "breaking_crossed_ops": 0,
+  "catalogue_breaking_crossed": 0,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Is the device at 192.0.2.2 port 40002 within 2 km of 50.083, 14.432 in Prague?",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/location-verification/v3/verify",
+    "body": {
+      "device": {
+        "ipv4Address": {
+          "publicAddress": "192.0.2.2",
+          "publicPort": 40002
+        }
+      },
+      "area": {
+        "areaType": "CIRCLE",
+        "center": {
+          "latitude": 50.083,
+          "longitude": 14.432
+        },
+        "radius": 2000
+      }
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v3.0.0 response schema: verificationResult TRUE/FALSE/PARTIAL, lastLocationTime required, matchRate optional",
+    "type": "object",
+    "required": [
+      "verificationResult",
+      "lastLocationTime"
+    ],
+    "properties": {
+      "verificationResult": {
+        "type": "string",
+        "enum": [
+          true,
+          false,
+          "PARTIAL"
+        ]
+      },
+      "lastLocationTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "matchRate": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 99
+      },
+      "device": {
+        "type": "object"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D02"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/location-verification/v3/verify",
+      "body": {
+        "device": {
+          "ipv4Address": {
+            "publicAddress": "192.0.2.2",
+            "publicPort": 40002
+          }
+        },
+        "area": {
+          "areaType": "CIRCLE",
+          "center": {
+            "latitude": 50.083,
+            "longitude": 14.432
+          },
+          "radius": 2000
+        }
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 200,
+    "body": {
+      "verificationResult": "TRUE",
+      "lastLocationTime": "2026-12-01T11:58:00Z"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "verificationResult": "TRUE",
+      "lastLocationTime": "2026-12-01T11:58:00Z"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [],
+  "change_tags_response": [],
+  "material_fields": [
+    "device",
+    "area.center.latitude",
+    "area.center.longitude",
+    "area.radius",
+    "maxAge"
+  ],
+  "provenance": "authored"
+}

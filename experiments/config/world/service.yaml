@@ -1,0 +1,33 @@
+# World: service settings (stage 04).
+# The default clock is used when a request carries no X-Eval-Clock header (stage 05 sets one per task).
+clock_default: "2026-12-01T12:00:00Z"
+
+# Fictional number range used for every phone number: +99 0100 0001 ... +99 0100 0040
+# (+990 is not assigned in E.164; the numbers are well-formed against the CAMARA PhoneNumber pattern).
+phone_number_prefix: "+990100"
+
+# Address ranges (RFC 5737 / RFC 3849). Public addresses of devices come from 192.0.2.0/24,
+# private addresses from 203.0.113.0/24, application servers are expected in 198.51.100.0/24.
+# Devices D31-D40 share the public addresses of D01-D10 (carrier-grade NAT) and differ by port and private address.
+# IPv6: each device owns one /64 inside 2001:db8:a::/48 (device Dnn: 2001:db8:a:<nn in hex>::/64).
+ipv4_public_range: "192.0.2.0/24"
+ipv4_private_range: "203.0.113.0/24"
+ipv4_application_server_range: "198.51.100.0/24"
+ipv6_range: "2001:db8::/32"
+
+# Local ports of the three backends (the launcher can shift all three with --base-port).
+ports: {L1: 9101, L2: 9102, L3: 9103}
+
+# Device identifiers this operator does not support, answered with 422 UNSUPPORTED_IDENTIFIER when no other
+# identifier is given. The L1 v1.0.0, L2 v3.0.0 and L3 v1.1.0 texts all say that networkAccessIdentifier
+# is "not supported for this API version" / "defined for future use" / "CAMARA does not currently allow its use".
+unsupported_identifiers: [networkAccessIdentifier]
+
+# L2 Location Verification v3.0.0
+location:
+  # Circle radius below this value is refused with LOCATION_VERIFICATION.INVALID_AREA
+  # (the Circle.radius description allows a larger minimum radius, "e.g. 1000 meters").
+  min_radius_m: 1000
+  # Centres outside this box are refused with LOCATION_VERIFICATION.AREA_NOT_COVERED.
+  coverage: {lat_min: 35.0, lat_max: 60.0, lon_min: -12.0, lon_max: 25.0}
+  earth_radius_m: 6371008.8

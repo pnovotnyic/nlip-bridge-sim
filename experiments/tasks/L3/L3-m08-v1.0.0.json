@@ -1,0 +1,178 @@
+{
+  "schema_version": "1",
+  "task_id": "L3-m08-v1.0.0",
+  "intent_id": "m08",
+  "pilot": false,
+  "api": "L3",
+  "operation": "createSession",
+  "client_version": "v1.0.0",
+  "server_version": "v1.1.0",
+  "versions_behind": 1,
+  "breaking_crossed": 0,
+  "breaking_crossed_ops": 0,
+  "catalogue_breaking_crossed": 0,
+  "prompt_half": false,
+  "pilot_round": null,
+  "intent_text": "Create a video streaming session for the device at 192.0.2.8 port 40008 to the media server at 198.51.100.60, server ports 5000–5100, for 1.5 hours.",
+  "client_native_request": {
+    "method": "POST",
+    "path": "/quality-on-demand/v1/sessions",
+    "body": {
+      "duration": 5400,
+      "device": {
+        "ipv4Address": {
+          "publicAddress": "192.0.2.8",
+          "publicPort": 40008
+        }
+      },
+      "applicationServer": {
+        "ipv4Address": "198.51.100.60"
+      },
+      "applicationServerPorts": {
+        "ranges": [
+          {
+            "from": 5000,
+            "to": 5100
+          }
+        ]
+      },
+      "qosProfile": "QOS_M"
+    }
+  },
+  "client_facts": [],
+  "client_answer_schema": {
+    "description": "v1.0.0 createSession: same as v0.11.0",
+    "type": "object",
+    "required": [
+      "sessionId",
+      "duration",
+      "qosStatus"
+    ],
+    "properties": {
+      "sessionId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "startedAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "expiresAt": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "duration": {
+        "type": "integer"
+      },
+      "device": {
+        "type": "object"
+      },
+      "applicationServer": {
+        "type": "object"
+      },
+      "qosProfile": {
+        "type": "string"
+      },
+      "qosStatus": {
+        "type": "string",
+        "enum": [
+          "REQUESTED",
+          "AVAILABLE",
+          "UNAVAILABLE"
+        ]
+      },
+      "statusInfo": {
+        "type": "string"
+      }
+    }
+  },
+  "world_ref": {
+    "device": "D08"
+  },
+  "gold_calls": [
+    {
+      "method": "POST",
+      "path": "/quality-on-demand/v1/sessions",
+      "body": {
+        "duration": 5400,
+        "device": {
+          "ipv4Address": {
+            "publicAddress": "192.0.2.8",
+            "publicPort": 40008
+          }
+        },
+        "applicationServer": {
+          "ipv4Address": "198.51.100.60"
+        },
+        "applicationServerPorts": {
+          "ranges": [
+            {
+              "from": 5000,
+              "to": 5100
+            }
+          ]
+        },
+        "qosProfile": "QOS_M"
+      }
+    }
+  ],
+  "gold_backend_response": {
+    "status": 201,
+    "body": {
+      "applicationServer": {
+        "ipv4Address": "198.51.100.60"
+      },
+      "applicationServerPorts": {
+        "ranges": [
+          {
+            "from": 5000,
+            "to": 5100
+          }
+        ]
+      },
+      "qosProfile": "QOS_M",
+      "sessionId": "e30aad5a-ddd9-5f19-9191-4e5ba04554fe",
+      "duration": 5400,
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T13:30:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "gold_client_answer": {
+    "status": "done",
+    "result": {
+      "duration": 5400,
+      "applicationServer": {
+        "ipv4Address": "198.51.100.60"
+      },
+      "applicationServerPorts": {
+        "ranges": [
+          {
+            "from": 5000,
+            "to": 5100
+          }
+        ]
+      },
+      "qosProfile": "QOS_M",
+      "sessionId": "e30aad5a-ddd9-5f19-9191-4e5ba04554fe",
+      "startedAt": "2026-12-01T12:00:00Z",
+      "expiresAt": "2026-12-01T13:30:00Z",
+      "qosStatus": "AVAILABLE"
+    }
+  },
+  "expected_refusal": null,
+  "refusal_predictable": false,
+  "missing_info": [],
+  "missing_info_source": {},
+  "change_tags_request": [],
+  "change_tags_response": [],
+  "material_fields": [
+    "operation",
+    "sessionId",
+    "device",
+    "applicationServer",
+    "qosProfile",
+    "duration"
+  ],
+  "provenance": "authored"
+}

@@ -1,0 +1,26 @@
+# 07b smoke run: 2 round-A instances per API (intent p01 at the current and the oldest version),
+# R3, P2, NLIP and NLIP-0: 12 sessions. Registered in data/RUNS.md with status "smoke"; not used in the analysis.
+# Run with: uv run python -m nlipeval.runner.run --matrix config/runs/smoke-r3.yaml
+
+run_id: null                    # auto-generated from timestamp when null
+label: smoke-r3
+stage: smoke
+
+task_filter:
+  apis: [L1, L2, L3]
+  pilot_round: A
+  per_api_limit: 1              # the first round-A intent per API (p01): 2 instances per API
+  client_versions:              # oldest and current version, per API
+    L1: [v0.5.1, v1.0.0]
+    L2: [v0.1.0, v3.0.0]
+    L3: [v0.8.1, v1.1.0]
+
+rungs: [R3]
+prompts: [P2]
+conditions: [NLIP, NLIP-0]
+attempt: 1
+
+concurrency:
+  R3: 8
+
+budget_calls: 500

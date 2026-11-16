@@ -1,0 +1,86 @@
+# Answer schemas for L2 Location Verification.
+# These define the fields a client of each version reads from the response.
+
+api: L2
+server_version: v3.0.0
+operation: verifyLocation
+
+schemas:
+  v0.1.0:
+    # Stage 05 note: v0.1.0 verificationResult was a boolean; no lastLocationTime, no matchRate
+    description: "v0.1.0 response schema: verificationResult boolean"
+    type: object
+    required: [verificationResult]
+    properties:
+      verificationResult:
+        type: boolean
+
+  v0.2.0:
+    # Stage 05 note: v0.2.0 introduced string enum TRUE/FALSE/PARTIAL/UNKNOWN, optional lastLocationTime, matchRate
+    description: "v0.2.0 response schema: verificationResult string enum, optional lastLocationTime and matchRate"
+    type: object
+    required: [verificationResult]
+    properties:
+      verificationResult:
+        type: string
+        enum: [TRUE, FALSE, PARTIAL, UNKNOWN]
+      lastLocationTime:
+        type: string
+        format: date-time
+      matchRate:
+        type: integer
+        minimum: 1
+        maximum: 99
+
+  v1.0.0:
+    # Same as v0.2.0
+    description: "v1.0.0 response schema: verificationResult string enum, optional lastLocationTime and matchRate"
+    type: object
+    required: [verificationResult]
+    properties:
+      verificationResult:
+        type: string
+        enum: [TRUE, FALSE, PARTIAL, UNKNOWN]
+      lastLocationTime:
+        type: string
+        format: date-time
+      matchRate:
+        type: integer
+        minimum: 1
+        maximum: 99
+
+  v2.0.0:
+    # Same as v0.2.0 / v1.0.0
+    description: "v2.0.0 response schema: verificationResult string enum, optional lastLocationTime and matchRate"
+    type: object
+    required: [verificationResult]
+    properties:
+      verificationResult:
+        type: string
+        enum: [TRUE, FALSE, PARTIAL, UNKNOWN]
+      lastLocationTime:
+        type: string
+        format: date-time
+      matchRate:
+        type: integer
+        minimum: 1
+        maximum: 99
+
+  v3.0.0:
+    # v3.0.0: no UNKNOWN (error instead), lastLocationTime required
+    description: "v3.0.0 response schema: verificationResult TRUE/FALSE/PARTIAL, lastLocationTime required, matchRate optional"
+    type: object
+    required: [verificationResult, lastLocationTime]
+    properties:
+      verificationResult:
+        type: string
+        enum: [TRUE, FALSE, PARTIAL]
+      lastLocationTime:
+        type: string
+        format: date-time
+      matchRate:
+        type: integer
+        minimum: 1
+        maximum: 99
+      device:
+        type: object

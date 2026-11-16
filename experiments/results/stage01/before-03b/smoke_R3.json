@@ -1,0 +1,85 @@
+{
+  "rung": "R3",
+  "model": "openai/gpt-oss-20b",
+  "provider": "rits",
+  "settings_sent": {
+    "params": {
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "seed": 0
+    },
+    "extra_body": {
+      "reasoning_effort": "medium"
+    },
+    "thinking": "reasoning_effort_medium"
+  },
+  "tests": {
+    "1_chat": {
+      "pass": true,
+      "reply": "pong",
+      "error": null,
+      "latency_s": 0.919,
+      "usage": {
+        "prompt_tokens": 86,
+        "completion_tokens": 71,
+        "reasoning_tokens": null
+      }
+    },
+    "2_system_prompt": {
+      "pass": true,
+      "reply": "BANANA",
+      "error": null
+    },
+    "3_structured": {
+      "pass": true,
+      "chosen_mode": "json_schema",
+      "modes": {
+        "json_schema": {
+          "valid": 5,
+          "of": 5,
+          "errors": []
+        }
+      },
+      "median_latency_s": 1.74
+    },
+    "4_long_context": {
+      "pass": true,
+      "prompt_tokens_reported": 19996,
+      "reply": "TANGO-4417",
+      "error": null,
+      "latency_s": 0.68
+    },
+    "5_latency": {
+      "median_latency_s_4k_prompt_300_tokens": 1.78,
+      "completion_tokens": [
+        300,
+        300,
+        300
+      ],
+      "concurrency": {
+        "1": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 0.8
+        },
+        "2": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 0.81
+        },
+        "4": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 1.19
+        },
+        "8": {
+          "n_429": 0,
+          "errors": 0,
+          "wall_s": 1.03
+        }
+      },
+      "safe_concurrency": 8
+    }
+  },
+  "pass_1_to_4": true
+}

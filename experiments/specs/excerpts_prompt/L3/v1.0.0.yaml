@@ -1,0 +1,1989 @@
+openapi: 3.0.3
+info:
+  title: Quality-On-Demand
+  version: 1.0.0
+paths:
+  /sessions:
+    post:
+      tags:
+      - QoS Sessions
+      summary: Creates a new session
+      description: "Create QoS Session to manage latency/throughput priorities\n\nIf the qosStatus in the API response is\
+        \ \"AVAILABLE\" and a notification callback is provided the API consumer will receive in addition to the response\
+        \ a\n`QOS_STATUS_CHANGED` event notification with `qosStatus` as `AVAILABLE`.\n\nIf the `qosStatus` in the API response\
+        \ is `REQUESTED`, the client will receive either\n- a `QOS_STATUS_CHANGED` event notification with `qosStatus` as\
+        \ `AVAILABLE` after the network notifies that it has created the requested session, or\n- a `QOS_STATUS_CHANGED` event\
+        \ notification with `qosStatus` as `UNAVAILABLE` and `statusInfo` as `NETWORK_TERMINATED` after the network notifies\
+        \ that it has failed to provide the requested session.\n\nA `QOS_STATUS_CHANGED` event notification with `qosStatus`\
+        \ as `UNAVAILABLE` will also be send if the network terminates the session before the requested duration expired\n\
+        \n**NOTES:**\n- In case of a `QOS_STATUS_CHANGED` event with `qosStatus` as `UNAVAILABLE` and `statusInfo` as `NETWORK_TERMINATED`\
+        \ the resources of the QoS session are not directly released, but will get deleted automatically at earliest 360 seconds\
+        \ after the event.\n\n  This behavior allows API consumers which are not receiving notification events but are polling\
+        \ to get the session information with the `qosStatus` `UNAVAILABLE` and `statusInfo` `NETWORK_TERMINATED`. Before\
+        \ a API consumer can attempt to create a new QoD session for the same device and flow period they must release the\
+        \ session resources with an explicit `delete` operation if not yet automatically deleted.\n- The access token may\
+        \ be either 2-legged or 3-legged. See \"Identifying the device from the access token\" for further information\n \
+        \ - When the API is invoked using a two-legged access token, the subject will be identified from the optional `device`\
+        \ object, which therefore MUST be provided.\n  - When a three-legged access token is used however, this optional identifier\
+        \ MUST NOT be provided, as the subject will be uniquely identified from the access token.\n"
+      operationId: createSession
+      parameters:
+      - name: x-correlator
+        in: header
+        description: Correlation id for the different services
+        schema:
+          type: string
+          pattern: ^[a-zA-Z0-9-]{0,55}$
+      requestBody:
+        description: Parameters to create a new session
+        content:
+          application/json:
+            schema:
+              description: Attributes required to create a session
+              allOf:
+              - description: Common attributes of a QoD session
+                type: object
+                properties:
+                  device:
+                    description: 'End-user equipment able to connect to a network. Examples of devices include smartphones
+                      or IoT sensors/actuators.
+
+
+                      The developer can choose to provide the below specified device identifiers:
+
+
+                      * `ipv4Address`
+
+                      * `ipv6Address`
+
+                      * `phoneNumber`
+
+                      * `networkAccessIdentifier`
+
+
+                      NOTE1: the network operator might support only a subset of these options. The API consumer can provide
+                      multiple identifiers to be compatible across different network operators. In this case the identifiers
+                      MUST belong to the same device.
+
+                      NOTE2: as for this Commonalities release, we are enforcing that the networkAccessIdentifier is only
+                      part of the schema for future-proofing, and CAMARA does not currently allow its use. After the CAMARA
+                      meta-release work is concluded and the relevant issues are resolved, its use will need to be explicitly
+                      documented in the guidelines.
+
+                      '
+                    type: object
+                    properties:
+                      phoneNumber:
+                        description: A public identifier addressing a telephone subscription. In mobile networks it corresponds
+                          to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally
+                          unique it has to be formatted in international format, according to E.164 standard, prefixed with
+                          '+'.
+                        type: string
+                        pattern: ^\+[1-9][0-9]{4,14}$
+                      networkAccessIdentifier:
+                        description: A public identifier addressing a subscription in a mobile network. In 3GPP terminology,
+                          it corresponds to the GPSI formatted with the External Identifier ({Local Identifier}@{Domain Identifier}).
+                          Unlike the telephone number, the network access identifier is not subjected to portability ruling
+                          in force, and is individually managed by each operator.
+                        type: string
+                      ipv4Address:
+                        type: object
+                        description: 'The device should be identified by either the public (observed) IP address and port
+                          as seen by the application server, or the private (local) and any public (observed) IP addresses
+                          in use by the device (this information can be obtained by various means, for example from some DNS
+                          servers).
+
+
+                          If the allocated and observed IP addresses are the same (i.e. NAT is not in use) then  the same
+                          address should be specified for both publicAddress and privateAddress.
+
+
+                          If NAT64 is in use, the device should be identified by its publicAddress and publicPort, or separately
+                          by its allocated IPv6 address (field ipv6Address of the Device object)
+
+
+                          In all cases, publicAddress must be specified, along with at least one of either privateAddress
+                          or publicPort, dependent upon which is known. In general, mobile devices cannot be identified by
+                          their public IPv4 address alone.
+
+                          '
+                        properties:
+                          publicAddress:
+                            description: A single IPv4 address with no subnet mask
+                            type: string
+                            format: ipv4
+                          privateAddress:
+                            description: A single IPv4 address with no subnet mask
+                            type: string
+                            format: ipv4
+                          publicPort:
+                            description: TCP or UDP port number
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                        anyOf:
+                        - required:
+                          - publicAddress
+                          - privateAddress
+                        - required:
+                          - publicAddress
+                          - publicPort
+                      ipv6Address:
+                        description: 'The device should be identified by the observed IPv6 address, or by any single IPv6
+                          address from within the subnet allocated to the device (e.g. adding ::0 to the /64 prefix).
+
+
+                          The session shall apply to all IP flows between the device subnet and the specified application
+                          server, unless further restricted by the optional parameters devicePorts or applicationServerPorts.
+
+                          '
+                        type: string
+                        format: ipv6
+                    minProperties: 1
+                  applicationServer:
+                    description: 'A server hosting backend applications to deliver some business logic to clients.
+
+
+                      The developer can choose to provide the below specified device identifiers:
+
+
+                      * `ipv4Address`
+
+                      * `ipv6Address`
+
+                      '
+                    type: object
+                    properties:
+                      ipv4Address:
+                        type: string
+                        description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                          \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n  -\
+                          \ address/mask - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this case,\
+                          \ all IP numbers from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the IP version.\n"
+                      ipv6Address:
+                        type: string
+                        description: "IPv6 address may be specified in form <address/mask> as:\n  - address - The /128 subnet\
+                          \ is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n\
+                          \  - address/mask - an IP v6 number with a mask:\n    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                    minProperties: 1
+                  devicePorts:
+                    description: The ports used locally by the device for flows to which the requested QoS profile should
+                      apply. If omitted, then the qosProfile will apply to all flows between the device and the specified
+                      application server address and ports
+                    allOf:
+                    - description: Specification of several TCP or UDP ports
+                      type: object
+                      minProperties: 1
+                      properties:
+                        ranges:
+                          description: Range of TCP or UDP ports
+                          type: array
+                          minItems: 1
+                          items:
+                            type: object
+                            required:
+                            - from
+                            - to
+                            properties:
+                              from:
+                                description: TCP or UDP port number
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                              to:
+                                description: TCP or UDP port number
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                        ports:
+                          description: Array of TCP or UDP ports
+                          type: array
+                          minItems: 1
+                          items:
+                            description: TCP or UDP port number
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                  applicationServerPorts:
+                    description: A list of single ports or port ranges on the application server
+                    allOf:
+                    - description: Specification of several TCP or UDP ports
+                      type: object
+                      minProperties: 1
+                      properties:
+                        ranges:
+                          description: Range of TCP or UDP ports
+                          type: array
+                          minItems: 1
+                          items:
+                            type: object
+                            required:
+                            - from
+                            - to
+                            properties:
+                              from:
+                                description: TCP or UDP port number
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                              to:
+                                description: TCP or UDP port number
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                        ports:
+                          description: Array of TCP or UDP ports
+                          type: array
+                          minItems: 1
+                          items:
+                            description: TCP or UDP port number
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                  qosProfile:
+                    description: "A unique name for identifying a specific QoS profile.\nThis may follow different formats\
+                      \ depending on the API provider implementation.\nSome options addresses:\n  - A UUID style string\n\
+                      \  - Support for predefined profiles QOS_S, QOS_M, QOS_L, and QOS_E\n  - A searchable descriptive name\n\
+                      The set of QoS Profiles that an API provider is offering may be retrieved by means of the QoS Profile\
+                      \ API (qos-profile) or agreed on onboarding time.\n"
+                    type: string
+                    minLength: 3
+                    maxLength: 256
+                    format: string
+                    pattern: ^[a-zA-Z0-9_.-]+$
+                  sink:
+                    type: string
+                    format: uri
+                    description: The address to which events about all status changes of the session (e.g. session termination)
+                      shall be delivered using the selected protocol.
+                  sinkCredential:
+                    description: A sink credential provides authentication or authorization information necessary to enable
+                      delivery of events to a target.
+                    allOf:
+                    - type: object
+                      properties:
+                        credentialType:
+                          type: string
+                          enum:
+                          - PLAIN
+                          - ACCESSTOKEN
+                          - REFRESHTOKEN
+                          description: 'The type of the credential.
+
+                            Note: Type of the credential - MUST be set to ACCESSTOKEN for now
+
+                            '
+                      discriminator:
+                        propertyName: credentialType
+                        mapping:
+                          PLAIN: '#/components/schemas/PlainCredential'
+                          ACCESSTOKEN: '#/components/schemas/AccessTokenCredential'
+                          REFRESHTOKEN: '#/components/schemas/RefreshTokenCredential'
+                      required:
+                      - credentialType
+                      x-discriminator-subtypes:
+                        PLAIN:
+                          type: object
+                          description: A plain credential as a combination of an identifier and a secret. MUST not be used
+                            in this API version.
+                          allOf:
+                          - type: object
+                            required:
+                            - identifier
+                            - secret
+                            properties:
+                              identifier:
+                                description: The identifier might be an account or username.
+                                type: string
+                              secret:
+                                description: The secret might be a password or passphrase.
+                                type: string
+                        ACCESSTOKEN:
+                          type: object
+                          description: An access token credential.
+                          allOf:
+                          - type: object
+                            properties:
+                              accessToken:
+                                description: REQUIRED. An access token is a previously acquired token granting access to the
+                                  target resource.
+                                type: string
+                              accessTokenExpiresUtc:
+                                type: string
+                                format: date-time
+                                description: 'REQUIRED. An absolute (UTC) timestamp at which the token shall be considered
+                                  expired. Token expiration should occur
+
+                                  after the termination of the requested session, allowing the client to be notified of any
+                                  changes during the
+
+                                  sessions''s existence. If the token expires while the session is still active, the client
+                                  will stop receiving notifications.
+
+                                  If the access token is a JWT and registered "exp" (Expiration Time) claim is present, the
+                                  two expiry times should match.
+
+                                  It must follow [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) and
+                                  must have time zone.
+
+                                  Recommended format is yyyy-MM-dd''T''HH:mm:ss.SSSZ (i.e. which allows 2023-07-03T14:27:08.312+02:00
+                                  or 2023-07-03T12:27:08.312Z)
+
+                                  '
+                              accessTokenType:
+                                description: REQUIRED. Type of the access token (See [OAuth 2.0](https://tools.ietf.org/html/rfc6749#section-7.1)).
+                                  For the current version of the API the type MUST be set to `Bearer`.
+                                type: string
+                                enum:
+                                - bearer
+                            required:
+                            - accessToken
+                            - accessTokenExpiresUtc
+                            - accessTokenType
+                        REFRESHTOKEN:
+                          type: object
+                          description: An access token credential with a refresh token. MUST not be used in this API version.
+                          allOf:
+                          - type: object
+                            properties:
+                              accessToken:
+                                description: REQUIRED. An access token is a previously acquired token granting access to the
+                                  target resource.
+                                type: string
+                              accessTokenExpiresUtc:
+                                type: string
+                                format: date-time
+                                description: REQUIRED. An absolute UTC instant at which the token shall be considered expired.
+                              accessTokenType:
+                                description: REQUIRED. Type of the access token (See [OAuth 2.0](https://tools.ietf.org/html/rfc6749#section-7.1)).
+                                type: string
+                                enum:
+                                - bearer
+                              refreshToken:
+                                description: REQUIRED. An refresh token credential used to acquire access tokens.
+                                type: string
+                              refreshTokenEndpoint:
+                                type: string
+                                format: uri
+                                description: REQUIRED. A URL at which the refresh token can be traded for an access token.
+                          required:
+                          - accessToken
+                          - accessTokenExpiresUtc
+                          - accessTokenType
+                          - refreshToken
+                          - refreshTokenEndpoint
+                required:
+                - applicationServer
+                - qosProfile
+              - type: object
+                properties:
+                  duration:
+                    description: 'Requested session duration in seconds. Value may be explicitly limited for the QoS profile,
+                      as specified in the Qos Profile (see qos-profile API). Implementations can grant the requested session
+                      duration or set a different duration, based on network policies or conditions.
+
+                      '
+                    type: integer
+                    format: int32
+                    minimum: 1
+                required:
+                - duration
+        required: true
+      responses:
+        '201':
+          description: Session created
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                description: 'Session related information returned in responses.
+
+                  Note that the device object is defined as optional and will only to be returned if provided in createSession.
+                  If more than one type of device identifier was provided, only one identifier will be returned (at implementation
+                  choice and with the original value provided in createSession).
+
+                  Please note that IP addresses of devices can change and get reused, so the original values may no longer
+                  identify the same device. They identified the device at the time of session creation.
+
+                  '
+                allOf:
+                - description: Common attributes of a QoD session
+                  type: object
+                  properties:
+                    device:
+                      description: 'End-user equipment able to connect to a network. Examples of devices include smartphones
+                        or IoT sensors/actuators.
+
+
+                        The developer can choose to provide the below specified device identifiers:
+
+
+                        * `ipv4Address`
+
+                        * `ipv6Address`
+
+                        * `phoneNumber`
+
+                        * `networkAccessIdentifier`
+
+
+                        NOTE1: the network operator might support only a subset of these options. The API consumer can provide
+                        multiple identifiers to be compatible across different network operators. In this case the identifiers
+                        MUST belong to the same device.
+
+                        NOTE2: as for this Commonalities release, we are enforcing that the networkAccessIdentifier is only
+                        part of the schema for future-proofing, and CAMARA does not currently allow its use. After the CAMARA
+                        meta-release work is concluded and the relevant issues are resolved, its use will need to be explicitly
+                        documented in the guidelines.
+
+                        '
+                      type: object
+                      properties:
+                        phoneNumber:
+                          description: A public identifier addressing a telephone subscription. In mobile networks it corresponds
+                            to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally
+                            unique it has to be formatted in international format, according to E.164 standard, prefixed with
+                            '+'.
+                          type: string
+                          pattern: ^\+[1-9][0-9]{4,14}$
+                        networkAccessIdentifier:
+                          description: A public identifier addressing a subscription in a mobile network. In 3GPP terminology,
+                            it corresponds to the GPSI formatted with the External Identifier ({Local Identifier}@{Domain
+                            Identifier}). Unlike the telephone number, the network access identifier is not subjected to portability
+                            ruling in force, and is individually managed by each operator.
+                          type: string
+                        ipv4Address:
+                          type: object
+                          description: 'The device should be identified by either the public (observed) IP address and port
+                            as seen by the application server, or the private (local) and any public (observed) IP addresses
+                            in use by the device (this information can be obtained by various means, for example from some
+                            DNS servers).
+
+
+                            If the allocated and observed IP addresses are the same (i.e. NAT is not in use) then  the same
+                            address should be specified for both publicAddress and privateAddress.
+
+
+                            If NAT64 is in use, the device should be identified by its publicAddress and publicPort, or separately
+                            by its allocated IPv6 address (field ipv6Address of the Device object)
+
+
+                            In all cases, publicAddress must be specified, along with at least one of either privateAddress
+                            or publicPort, dependent upon which is known. In general, mobile devices cannot be identified
+                            by their public IPv4 address alone.
+
+                            '
+                          properties:
+                            publicAddress:
+                              description: A single IPv4 address with no subnet mask
+                              type: string
+                              format: ipv4
+                            privateAddress:
+                              description: A single IPv4 address with no subnet mask
+                              type: string
+                              format: ipv4
+                            publicPort:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                          anyOf:
+                          - required:
+                            - publicAddress
+                            - privateAddress
+                          - required:
+                            - publicAddress
+                            - publicPort
+                        ipv6Address:
+                          description: 'The device should be identified by the observed IPv6 address, or by any single IPv6
+                            address from within the subnet allocated to the device (e.g. adding ::0 to the /64 prefix).
+
+
+                            The session shall apply to all IP flows between the device subnet and the specified application
+                            server, unless further restricted by the optional parameters devicePorts or applicationServerPorts.
+
+                            '
+                          type: string
+                          format: ipv6
+                      minProperties: 1
+                    applicationServer:
+                      description: 'A server hosting backend applications to deliver some business logic to clients.
+
+
+                        The developer can choose to provide the below specified device identifiers:
+
+
+                        * `ipv4Address`
+
+                        * `ipv6Address`
+
+                        '
+                      type: object
+                      properties:
+                        ipv4Address:
+                          type: string
+                          description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                            \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n \
+                            \ - address/mask - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this\
+                            \ case, all IP numbers from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the\
+                            \ IP version.\n"
+                        ipv6Address:
+                          type: string
+                          description: "IPv6 address may be specified in form <address/mask> as:\n  - address - The /128 subnet\
+                            \ is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n\
+                            \  - address/mask - an IP v6 number with a mask:\n    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                      minProperties: 1
+                    devicePorts:
+                      description: The ports used locally by the device for flows to which the requested QoS profile should
+                        apply. If omitted, then the qosProfile will apply to all flows between the device and the specified
+                        application server address and ports
+                      allOf:
+                      - description: Specification of several TCP or UDP ports
+                        type: object
+                        minProperties: 1
+                        properties:
+                          ranges:
+                            description: Range of TCP or UDP ports
+                            type: array
+                            minItems: 1
+                            items:
+                              type: object
+                              required:
+                              - from
+                              - to
+                              properties:
+                                from:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                                to:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                          ports:
+                            description: Array of TCP or UDP ports
+                            type: array
+                            minItems: 1
+                            items:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                    applicationServerPorts:
+                      description: A list of single ports or port ranges on the application server
+                      allOf:
+                      - description: Specification of several TCP or UDP ports
+                        type: object
+                        minProperties: 1
+                        properties:
+                          ranges:
+                            description: Range of TCP or UDP ports
+                            type: array
+                            minItems: 1
+                            items:
+                              type: object
+                              required:
+                              - from
+                              - to
+                              properties:
+                                from:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                                to:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                          ports:
+                            description: Array of TCP or UDP ports
+                            type: array
+                            minItems: 1
+                            items:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                    qosProfile:
+                      description: "A unique name for identifying a specific QoS profile.\nThis may follow different formats\
+                        \ depending on the API provider implementation.\nSome options addresses:\n  - A UUID style string\n\
+                        \  - Support for predefined profiles QOS_S, QOS_M, QOS_L, and QOS_E\n  - A searchable descriptive\
+                        \ name\nThe set of QoS Profiles that an API provider is offering may be retrieved by means of the\
+                        \ QoS Profile API (qos-profile) or agreed on onboarding time.\n"
+                      type: string
+                      minLength: 3
+                      maxLength: 256
+                      format: string
+                      pattern: ^[a-zA-Z0-9_.-]+$
+                    sink:
+                      type: string
+                      format: uri
+                      description: The address to which events about all status changes of the session (e.g. session termination)
+                        shall be delivered using the selected protocol.
+                    sinkCredential:
+                      description: A sink credential provides authentication or authorization information necessary to enable
+                        delivery of events to a target.
+                      allOf:
+                      - type: object
+                        properties:
+                          credentialType:
+                            type: string
+                            enum:
+                            - PLAIN
+                            - ACCESSTOKEN
+                            - REFRESHTOKEN
+                            description: 'The type of the credential.
+
+                              Note: Type of the credential - MUST be set to ACCESSTOKEN for now
+
+                              '
+                        discriminator:
+                          propertyName: credentialType
+                          mapping:
+                            PLAIN: '#/components/schemas/PlainCredential'
+                            ACCESSTOKEN: '#/components/schemas/AccessTokenCredential'
+                            REFRESHTOKEN: '#/components/schemas/RefreshTokenCredential'
+                        required:
+                        - credentialType
+                        x-discriminator-subtypes:
+                          PLAIN:
+                            type: object
+                            description: A plain credential as a combination of an identifier and a secret. MUST not be used
+                              in this API version.
+                            allOf:
+                            - type: object
+                              required:
+                              - identifier
+                              - secret
+                              properties:
+                                identifier:
+                                  description: The identifier might be an account or username.
+                                  type: string
+                                secret:
+                                  description: The secret might be a password or passphrase.
+                                  type: string
+                          ACCESSTOKEN:
+                            type: object
+                            description: An access token credential.
+                            allOf:
+                            - type: object
+                              properties:
+                                accessToken:
+                                  description: REQUIRED. An access token is a previously acquired token granting access to
+                                    the target resource.
+                                  type: string
+                                accessTokenExpiresUtc:
+                                  type: string
+                                  format: date-time
+                                  description: 'REQUIRED. An absolute (UTC) timestamp at which the token shall be considered
+                                    expired. Token expiration should occur
+
+                                    after the termination of the requested session, allowing the client to be notified of
+                                    any changes during the
+
+                                    sessions''s existence. If the token expires while the session is still active, the client
+                                    will stop receiving notifications.
+
+                                    If the access token is a JWT and registered "exp" (Expiration Time) claim is present,
+                                    the two expiry times should match.
+
+                                    It must follow [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) and
+                                    must have time zone.
+
+                                    Recommended format is yyyy-MM-dd''T''HH:mm:ss.SSSZ (i.e. which allows 2023-07-03T14:27:08.312+02:00
+                                    or 2023-07-03T12:27:08.312Z)
+
+                                    '
+                                accessTokenType:
+                                  description: REQUIRED. Type of the access token (See [OAuth 2.0](https://tools.ietf.org/html/rfc6749#section-7.1)).
+                                    For the current version of the API the type MUST be set to `Bearer`.
+                                  type: string
+                                  enum:
+                                  - bearer
+                              required:
+                              - accessToken
+                              - accessTokenExpiresUtc
+                              - accessTokenType
+                          REFRESHTOKEN:
+                            type: object
+                            description: An access token credential with a refresh token. MUST not be used in this API version.
+                            allOf:
+                            - type: object
+                              properties:
+                                accessToken:
+                                  description: REQUIRED. An access token is a previously acquired token granting access to
+                                    the target resource.
+                                  type: string
+                                accessTokenExpiresUtc:
+                                  type: string
+                                  format: date-time
+                                  description: REQUIRED. An absolute UTC instant at which the token shall be considered expired.
+                                accessTokenType:
+                                  description: REQUIRED. Type of the access token (See [OAuth 2.0](https://tools.ietf.org/html/rfc6749#section-7.1)).
+                                  type: string
+                                  enum:
+                                  - bearer
+                                refreshToken:
+                                  description: REQUIRED. An refresh token credential used to acquire access tokens.
+                                  type: string
+                                refreshTokenEndpoint:
+                                  type: string
+                                  format: uri
+                                  description: REQUIRED. A URL at which the refresh token can be traded for an access token.
+                            required:
+                            - accessToken
+                            - accessTokenExpiresUtc
+                            - accessTokenType
+                            - refreshToken
+                            - refreshTokenEndpoint
+                  required:
+                  - applicationServer
+                  - qosProfile
+                - type: object
+                  properties:
+                    sessionId:
+                      description: Session ID in UUID format
+                      type: string
+                      format: uuid
+                    duration:
+                      description: 'Session duration in seconds. Implementations can grant the requested session duration
+                        or set a different duration, based on network policies or conditions.
+
+                        - When `qosStatus` is "REQUESTED", the value is the duration to be scheduled, granted by the implementation.
+
+                        - When `qosStatus` is AVAILABLE", the value is the overall duration since `startedAt. When the session
+                        is extended, the value is the new overall duration of the session.
+
+                        - When `qosStatus` is "UNAVAILABLE", the value is the overall effective duration since `startedAt`
+                        until the session was terminated.
+
+                        '
+                      type: integer
+                      format: int32
+                      minimum: 1
+                    startedAt:
+                      description: Date and time when the QoS status became "AVAILABLE". Not to be returned when `qosStatus`
+                        is "REQUESTED". Format must follow RFC 3339 and must indicate time zone (UTC or local).
+                      type: string
+                      format: date-time
+                    expiresAt:
+                      description: 'Date and time of the QoS session expiration. Format must follow RFC 3339 and must indicate
+                        time zone (UTC or local).
+
+                        - When `qosStatus` is "AVAILABLE", it is the limit time when the session is scheduled to finnish,
+                        if not terminated by other means.
+
+                        - When `qosStatus` is "UNAVAILABLE", it is the time when the session was terminated.
+
+                        - Not to be returned when `qosStatus` is "REQUESTED".
+
+                        When the session is extended, the value is the new expiration time of the session.
+
+                        '
+                      type: string
+                      format: date-time
+                    qosStatus:
+                      description: 'The current status of the requested QoS session. The status can be one of the following:
+
+                        * `REQUESTED` - QoS has been requested by creating a session
+
+                        * `AVAILABLE` - The requested QoS has been provided by the network
+
+                        * `UNAVAILABLE` - The requested QoS cannot be provided by the network due to some reason
+
+                        '
+                      type: string
+                      enum:
+                      - REQUESTED
+                      - AVAILABLE
+                      - UNAVAILABLE
+                    statusInfo:
+                      description: 'Reason for the new `qosStatus`. Currently `statusInfo` is only applicable when `qosStatus`
+                        is ''UNAVAILABLE''.
+
+                        * `DURATION_EXPIRED` - Session terminated due to requested duration expired
+
+                        * `NETWORK_TERMINATED` - Network terminated the session before the requested duration expired
+
+                        * `DELETE_REQUESTED`- User requested the deletion of the session before the requested duration expired
+
+                        '
+                      type: string
+                      enum:
+                      - DURATION_EXPIRED
+                      - NETWORK_TERMINATED
+                      - DELETE_REQUESTED
+                  required:
+                  - sessionId
+                  - duration
+                  - qosStatus
+        '400':
+          description: Bad Request when creating a session
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 400
+                    code:
+                      enum:
+                      - INVALID_ARGUMENT
+                      - OUT_OF_RANGE
+                      - QUALITY_ON_DEMAND.DURATION_OUT_OF_RANGE
+                      - INVALID_CREDENTIAL
+                      - INVALID_TOKEN
+        '401':
+          description: Unauthorized
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 401
+                    code:
+                      enum:
+                      - UNAUTHENTICATED
+                      - AUTHENTICATION_REQUIRED
+        '403':
+          description: Forbidden
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 403
+                    code:
+                      enum:
+                      - PERMISSION_DENIED
+        '404':
+          description: Not found
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 404
+                    code:
+                      enum:
+                      - NOT_FOUND
+                      - IDENTIFIER_NOT_FOUND
+        '409':
+          description: Conflict
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 409
+                    code:
+                      enum:
+                      - CONFLICT
+        '422':
+          description: Unprocessable Content
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 422
+                    code:
+                      enum:
+                      - IDENTIFIER_MISMATCH
+                      - SERVICE_NOT_APPLICABLE
+                      - MISSING_IDENTIFIER
+                      - UNSUPPORTED_IDENTIFIER
+                      - UNNECESSARY_IDENTIFIER
+        '429':
+          description: Too Many Requests
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 429
+                    code:
+                      enum:
+                      - QUOTA_EXCEEDED
+                      - TOO_MANY_REQUESTS
+      callbacks:
+        notifications:
+          '{$request.body#/sink}':
+            post:
+              summary: Session notifications callback
+  /sessions/{sessionId}:
+    get:
+      tags:
+      - QoS Sessions
+      summary: Get QoS session information
+      description: 'Querying for QoS session resource information details
+
+
+        **NOTES:**
+
+        - The access token may be either 2-legged or 3-legged.
+
+        - If a 3-legged access token is used, the end user (and device) associated with the session must also be associated
+        with the access token.
+
+        - The session must have been created by the same API client given in the access token
+
+        '
+      operationId: getSession
+      parameters:
+      - name: sessionId
+        in: path
+        description: Session ID that was obtained from the createSession operation
+        required: true
+        schema:
+          description: Session ID in UUID format
+          type: string
+          format: uuid
+      - name: x-correlator
+        in: header
+        description: Correlation id for the different services
+        schema:
+          type: string
+          pattern: ^[a-zA-Z0-9-]{0,55}$
+      responses:
+        '200':
+          description: Contains information about active session
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                description: 'Session related information returned in responses.
+
+                  Note that the device object is defined as optional and will only to be returned if provided in createSession.
+                  If more than one type of device identifier was provided, only one identifier will be returned (at implementation
+                  choice and with the original value provided in createSession).
+
+                  Please note that IP addresses of devices can change and get reused, so the original values may no longer
+                  identify the same device. They identified the device at the time of session creation.
+
+                  '
+                allOf:
+                - description: Common attributes of a QoD session
+                  type: object
+                  properties:
+                    device:
+                      description: 'End-user equipment able to connect to a network. Examples of devices include smartphones
+                        or IoT sensors/actuators.
+
+
+                        The developer can choose to provide the below specified device identifiers:
+
+
+                        * `ipv4Address`
+
+                        * `ipv6Address`
+
+                        * `phoneNumber`
+
+                        * `networkAccessIdentifier`
+
+
+                        NOTE1: the network operator might support only a subset of these options. The API consumer can provide
+                        multiple identifiers to be compatible across different network operators. In this case the identifiers
+                        MUST belong to the same device.
+
+                        NOTE2: as for this Commonalities release, we are enforcing that the networkAccessIdentifier is only
+                        part of the schema for future-proofing, and CAMARA does not currently allow its use. After the CAMARA
+                        meta-release work is concluded and the relevant issues are resolved, its use will need to be explicitly
+                        documented in the guidelines.
+
+                        '
+                      type: object
+                      properties:
+                        phoneNumber:
+                          description: A public identifier addressing a telephone subscription. In mobile networks it corresponds
+                            to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally
+                            unique it has to be formatted in international format, according to E.164 standard, prefixed with
+                            '+'.
+                          type: string
+                          pattern: ^\+[1-9][0-9]{4,14}$
+                        networkAccessIdentifier:
+                          description: A public identifier addressing a subscription in a mobile network. In 3GPP terminology,
+                            it corresponds to the GPSI formatted with the External Identifier ({Local Identifier}@{Domain
+                            Identifier}). Unlike the telephone number, the network access identifier is not subjected to portability
+                            ruling in force, and is individually managed by each operator.
+                          type: string
+                        ipv4Address:
+                          type: object
+                          description: 'The device should be identified by either the public (observed) IP address and port
+                            as seen by the application server, or the private (local) and any public (observed) IP addresses
+                            in use by the device (this information can be obtained by various means, for example from some
+                            DNS servers).
+
+
+                            If the allocated and observed IP addresses are the same (i.e. NAT is not in use) then  the same
+                            address should be specified for both publicAddress and privateAddress.
+
+
+                            If NAT64 is in use, the device should be identified by its publicAddress and publicPort, or separately
+                            by its allocated IPv6 address (field ipv6Address of the Device object)
+
+
+                            In all cases, publicAddress must be specified, along with at least one of either privateAddress
+                            or publicPort, dependent upon which is known. In general, mobile devices cannot be identified
+                            by their public IPv4 address alone.
+
+                            '
+                          properties:
+                            publicAddress:
+                              description: A single IPv4 address with no subnet mask
+                              type: string
+                              format: ipv4
+                            privateAddress:
+                              description: A single IPv4 address with no subnet mask
+                              type: string
+                              format: ipv4
+                            publicPort:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                          anyOf:
+                          - required:
+                            - publicAddress
+                            - privateAddress
+                          - required:
+                            - publicAddress
+                            - publicPort
+                        ipv6Address:
+                          description: 'The device should be identified by the observed IPv6 address, or by any single IPv6
+                            address from within the subnet allocated to the device (e.g. adding ::0 to the /64 prefix).
+
+
+                            The session shall apply to all IP flows between the device subnet and the specified application
+                            server, unless further restricted by the optional parameters devicePorts or applicationServerPorts.
+
+                            '
+                          type: string
+                          format: ipv6
+                      minProperties: 1
+                    applicationServer:
+                      description: 'A server hosting backend applications to deliver some business logic to clients.
+
+
+                        The developer can choose to provide the below specified device identifiers:
+
+
+                        * `ipv4Address`
+
+                        * `ipv6Address`
+
+                        '
+                      type: object
+                      properties:
+                        ipv4Address:
+                          type: string
+                          description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                            \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n \
+                            \ - address/mask - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this\
+                            \ case, all IP numbers from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the\
+                            \ IP version.\n"
+                        ipv6Address:
+                          type: string
+                          description: "IPv6 address may be specified in form <address/mask> as:\n  - address - The /128 subnet\
+                            \ is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n\
+                            \  - address/mask - an IP v6 number with a mask:\n    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                      minProperties: 1
+                    devicePorts:
+                      description: The ports used locally by the device for flows to which the requested QoS profile should
+                        apply. If omitted, then the qosProfile will apply to all flows between the device and the specified
+                        application server address and ports
+                      allOf:
+                      - description: Specification of several TCP or UDP ports
+                        type: object
+                        minProperties: 1
+                        properties:
+                          ranges:
+                            description: Range of TCP or UDP ports
+                            type: array
+                            minItems: 1
+                            items:
+                              type: object
+                              required:
+                              - from
+                              - to
+                              properties:
+                                from:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                                to:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                          ports:
+                            description: Array of TCP or UDP ports
+                            type: array
+                            minItems: 1
+                            items:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                    applicationServerPorts:
+                      description: A list of single ports or port ranges on the application server
+                      allOf:
+                      - description: Specification of several TCP or UDP ports
+                        type: object
+                        minProperties: 1
+                        properties:
+                          ranges:
+                            description: Range of TCP or UDP ports
+                            type: array
+                            minItems: 1
+                            items:
+                              type: object
+                              required:
+                              - from
+                              - to
+                              properties:
+                                from:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                                to:
+                                  description: TCP or UDP port number
+                                  type: integer
+                                  minimum: 0
+                                  maximum: 65535
+                          ports:
+                            description: Array of TCP or UDP ports
+                            type: array
+                            minItems: 1
+                            items:
+                              description: TCP or UDP port number
+                              type: integer
+                              minimum: 0
+                              maximum: 65535
+                    qosProfile:
+                      description: "A unique name for identifying a specific QoS profile.\nThis may follow different formats\
+                        \ depending on the API provider implementation.\nSome options addresses:\n  - A UUID style string\n\
+                        \  - Support for predefined profiles QOS_S, QOS_M, QOS_L, and QOS_E\n  - A searchable descriptive\
+                        \ name\nThe set of QoS Profiles that an API provider is offering may be retrieved by means of the\
+                        \ QoS Profile API (qos-profile) or agreed on onboarding time.\n"
+                      type: string
+                      minLength: 3
+                      maxLength: 256
+                      format: string
+                      pattern: ^[a-zA-Z0-9_.-]+$
+                    sink:
+                      type: string
+                      format: uri
+                      description: The address to which events about all status changes of the session (e.g. session termination)
+                        shall be delivered using the selected protocol.
+                    sinkCredential:
+                      description: A sink credential provides authentication or authorization information necessary to enable
+                        delivery of events to a target.
+                      allOf:
+                      - type: object
+                        properties:
+                          credentialType:
+                            type: string
+                            enum:
+                            - PLAIN
+                            - ACCESSTOKEN
+                            - REFRESHTOKEN
+                            description: 'The type of the credential.
+
+                              Note: Type of the credential - MUST be set to ACCESSTOKEN for now
+
+                              '
+                        discriminator:
+                          propertyName: credentialType
+                          mapping:
+                            PLAIN: '#/components/schemas/PlainCredential'
+                            ACCESSTOKEN: '#/components/schemas/AccessTokenCredential'
+                            REFRESHTOKEN: '#/components/schemas/RefreshTokenCredential'
+                        required:
+                        - credentialType
+                        x-discriminator-subtypes:
+                          PLAIN:
+                            type: object
+                            description: A plain credential as a combination of an identifier and a secret. MUST not be used
+                              in this API version.
+                            allOf:
+                            - type: object
+                              required:
+                              - identifier
+                              - secret
+                              properties:
+                                identifier:
+                                  description: The identifier might be an account or username.
+                                  type: string
+                                secret:
+                                  description: The secret might be a password or passphrase.
+                                  type: string
+                          ACCESSTOKEN:
+                            type: object
+                            description: An access token credential.
+                            allOf:
+                            - type: object
+                              properties:
+                                accessToken:
+                                  description: REQUIRED. An access token is a previously acquired token granting access to
+                                    the target resource.
+                                  type: string
+                                accessTokenExpiresUtc:
+                                  type: string
+                                  format: date-time
+                                  description: 'REQUIRED. An absolute (UTC) timestamp at which the token shall be considered
+                                    expired. Token expiration should occur
+
+                                    after the termination of the requested session, allowing the client to be notified of
+                                    any changes during the
+
+                                    sessions''s existence. If the token expires while the session is still active, the client
+                                    will stop receiving notifications.
+
+                                    If the access token is a JWT and registered "exp" (Expiration Time) claim is present,
+                                    the two expiry times should match.
+
+                                    It must follow [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) and
+                                    must have time zone.
+
+                                    Recommended format is yyyy-MM-dd''T''HH:mm:ss.SSSZ (i.e. which allows 2023-07-03T14:27:08.312+02:00
+                                    or 2023-07-03T12:27:08.312Z)
+
+                                    '
+                                accessTokenType:
+                                  description: REQUIRED. Type of the access token (See [OAuth 2.0](https://tools.ietf.org/html/rfc6749#section-7.1)).
+                                    For the current version of the API the type MUST be set to `Bearer`.
+                                  type: string
+                                  enum:
+                                  - bearer
+                              required:
+                              - accessToken
+                              - accessTokenExpiresUtc
+                              - accessTokenType
+                          REFRESHTOKEN:
+                            type: object
+                            description: An access token credential with a refresh token. MUST not be used in this API version.
+                            allOf:
+                            - type: object
+                              properties:
+                                accessToken:
+                                  description: REQUIRED. An access token is a previously acquired token granting access to
+                                    the target resource.
+                                  type: string
+                                accessTokenExpiresUtc:
+                                  type: string
+                                  format: date-time
+                                  description: REQUIRED. An absolute UTC instant at which the token shall be considered expired.
+                                accessTokenType:
+                                  description: REQUIRED. Type of the access token (See [OAuth 2.0](https://tools.ietf.org/html/rfc6749#section-7.1)).
+                                  type: string
+                                  enum:
+                                  - bearer
+                                refreshToken:
+                                  description: REQUIRED. An refresh token credential used to acquire access tokens.
+                                  type: string
+                                refreshTokenEndpoint:
+                                  type: string
+                                  format: uri
+                                  description: REQUIRED. A URL at which the refresh token can be traded for an access token.
+                            required:
+                            - accessToken
+                            - accessTokenExpiresUtc
+                            - accessTokenType
+                            - refreshToken
+                            - refreshTokenEndpoint
+                  required:
+                  - applicationServer
+                  - qosProfile
+                - type: object
+                  properties:
+                    sessionId:
+                      description: Session ID in UUID format
+                      type: string
+                      format: uuid
+                    duration:
+                      description: 'Session duration in seconds. Implementations can grant the requested session duration
+                        or set a different duration, based on network policies or conditions.
+
+                        - When `qosStatus` is "REQUESTED", the value is the duration to be scheduled, granted by the implementation.
+
+                        - When `qosStatus` is AVAILABLE", the value is the overall duration since `startedAt. When the session
+                        is extended, the value is the new overall duration of the session.
+
+                        - When `qosStatus` is "UNAVAILABLE", the value is the overall effective duration since `startedAt`
+                        until the session was terminated.
+
+                        '
+                      type: integer
+                      format: int32
+                      minimum: 1
+                    startedAt:
+                      description: Date and time when the QoS status became "AVAILABLE". Not to be returned when `qosStatus`
+                        is "REQUESTED". Format must follow RFC 3339 and must indicate time zone (UTC or local).
+                      type: string
+                      format: date-time
+                    expiresAt:
+                      description: 'Date and time of the QoS session expiration. Format must follow RFC 3339 and must indicate
+                        time zone (UTC or local).
+
+                        - When `qosStatus` is "AVAILABLE", it is the limit time when the session is scheduled to finnish,
+                        if not terminated by other means.
+
+                        - When `qosStatus` is "UNAVAILABLE", it is the time when the session was terminated.
+
+                        - Not to be returned when `qosStatus` is "REQUESTED".
+
+                        When the session is extended, the value is the new expiration time of the session.
+
+                        '
+                      type: string
+                      format: date-time
+                    qosStatus:
+                      description: 'The current status of the requested QoS session. The status can be one of the following:
+
+                        * `REQUESTED` - QoS has been requested by creating a session
+
+                        * `AVAILABLE` - The requested QoS has been provided by the network
+
+                        * `UNAVAILABLE` - The requested QoS cannot be provided by the network due to some reason
+
+                        '
+                      type: string
+                      enum:
+                      - REQUESTED
+                      - AVAILABLE
+                      - UNAVAILABLE
+                    statusInfo:
+                      description: 'Reason for the new `qosStatus`. Currently `statusInfo` is only applicable when `qosStatus`
+                        is ''UNAVAILABLE''.
+
+                        * `DURATION_EXPIRED` - Session terminated due to requested duration expired
+
+                        * `NETWORK_TERMINATED` - Network terminated the session before the requested duration expired
+
+                        * `DELETE_REQUESTED`- User requested the deletion of the session before the requested duration expired
+
+                        '
+                      type: string
+                      enum:
+                      - DURATION_EXPIRED
+                      - NETWORK_TERMINATED
+                      - DELETE_REQUESTED
+                  required:
+                  - sessionId
+                  - duration
+                  - qosStatus
+        '400':
+          description: Bad Request
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 400
+                    code:
+                      enum:
+                      - INVALID_ARGUMENT
+                      - OUT_OF_RANGE
+        '401':
+          description: Unauthorized
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 401
+                    code:
+                      enum:
+                      - UNAUTHENTICATED
+                      - AUTHENTICATION_REQUIRED
+        '403':
+          description: Forbidden
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 403
+                    code:
+                      enum:
+                      - PERMISSION_DENIED
+        '404':
+          description: Not found
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 404
+                    code:
+                      enum:
+                      - NOT_FOUND
+        '429':
+          description: Too Many Requests
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 429
+                    code:
+                      enum:
+                      - QUOTA_EXCEEDED
+                      - TOO_MANY_REQUESTS
+    delete:
+      tags:
+      - QoS Sessions
+      summary: Delete a QoS session
+      description: 'Release resources related to QoS session
+
+
+        If the notification callback is provided and the `qosStatus` of the session was `AVAILABLE` the client will receive
+        in addition to the response a `QOS_STATUS_CHANGED` event with
+
+        - `qosStatus` as `UNAVAILABLE` and
+
+        - `statusInfo` as `DELETE_REQUESTED`
+
+        There will be no notification event if the `qosStatus` was already `UNAVAILABLE`.
+
+
+        **NOTES:**
+
+        - The access token may be either 2-legged or 3-legged.
+
+        - If a 3-legged access token is used, the subject associated with the session must also be associated with the access
+        token.
+
+        - The session must must have been created by the same API consumer given in the access token
+
+        '
+      operationId: deleteSession
+      parameters:
+      - name: sessionId
+        in: path
+        description: Session ID that was obtained from the createSession operation
+        required: true
+        schema:
+          description: Session ID in UUID format
+          type: string
+          format: uuid
+      - name: x-correlator
+        in: header
+        description: Correlation id for the different services
+        schema:
+          type: string
+          pattern: ^[a-zA-Z0-9-]{0,55}$
+      responses:
+        '204':
+          description: Session deleted
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+        '400':
+          description: Bad Request
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 400
+                    code:
+                      enum:
+                      - INVALID_ARGUMENT
+                      - OUT_OF_RANGE
+        '401':
+          description: Unauthorized
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 401
+                    code:
+                      enum:
+                      - UNAUTHENTICATED
+                      - AUTHENTICATION_REQUIRED
+        '403':
+          description: Forbidden
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 403
+                    code:
+                      enum:
+                      - PERMISSION_DENIED
+        '404':
+          description: Not found
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 404
+                    code:
+                      enum:
+                      - NOT_FOUND
+        '429':
+          description: Too Many Requests
+          headers:
+            x-correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+                pattern: ^[a-zA-Z0-9-]{0,55}$
+          content:
+            application/json:
+              schema:
+                allOf:
+                - description: Common schema for errors
+                  type: object
+                  properties:
+                    status:
+                      type: integer
+                      description: HTTP status code returned along with this error response
+                    code:
+                      type: string
+                      description: Code given to this error
+                    message:
+                      type: string
+                      description: Detailed error description
+                  required:
+                  - status
+                  - code
+                  - message
+                - type: object
+                  properties:
+                    status:
+                      enum:
+                      - 429
+                    code:
+                      enum:
+                      - QUOTA_EXCEEDED
+                      - TOO_MANY_REQUESTS
+servers:
+- url: '{apiRoot}/quality-on-demand/v1'
+  variables:
+    apiRoot:
+      default: http://localhost:9091
+      description: API root, defined by the service provider, e.g. `api.example.com` or `api.example.com/somepath`

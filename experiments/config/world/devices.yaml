@@ -1,0 +1,286 @@
+# World: devices (stage 04). 40 synthetic devices; address ranges are documented in README.md.
+# Times are ages in seconds before the task clock, so every task clock gives the same outcomes.
+# reachability.state: DATA_SMS | DATA_ONLY | SMS_ONLY | NONE.
+# location: null means the network has no known location for the device.
+# location.fresh_available: the network can compute a fresh fix on demand (needed for maxAge smaller than the stored age).
+devices:
+  - id: D01
+    phone_number: "+9901000001"
+    ipv4: {public_address: 192.0.2.1, public_port: 40001, private_address: 203.0.113.1}
+    ipv6: {address: "2001:db8:a:1::1", prefix: "2001:db8:a:1::/64"}
+    network_access_identifier: "dev001@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 10}
+    location: {city: Berlin, latitude: 52.520000, longitude: 13.411000, accuracy_m: 800, last_location_age_s: 30, fresh_available: true}
+  - id: D02
+    phone_number: "+9901000002"
+    ipv4: {public_address: 192.0.2.2, public_port: 40002, private_address: 203.0.113.2}
+    ipv6: {address: "2001:db8:a:2::1", prefix: "2001:db8:a:2::/64"}
+    network_access_identifier: "dev002@nlipeval.example"
+    reachability: {state: DATA_ONLY, last_status_age_s: 60}
+    location: {city: Prague, latitude: 50.083500, longitude: 14.431800, accuracy_m: 1500, last_location_age_s: 120, fresh_available: false}
+  - id: D03
+    phone_number: "+9901000003"
+    ipv4: {public_address: 192.0.2.3, public_port: 40003, private_address: 203.0.113.3}
+    ipv6: {address: "2001:db8:a:3::1", prefix: "2001:db8:a:3::/64"}
+    network_access_identifier: "dev003@nlipeval.example"
+    reachability: {state: SMS_ONLY, last_status_age_s: 300}
+    location: null
+  - id: D04
+    phone_number: "+9901000004"
+    ipv4: {public_address: 192.0.2.4, public_port: 40004, private_address: 203.0.113.4}
+    ipv6: {address: "2001:db8:a:4::1", prefix: "2001:db8:a:4::/64"}
+    network_access_identifier: "dev004@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 1800}
+    location: {city: Paris, latitude: 48.860600, longitude: 2.352200, accuracy_m: 4000, last_location_age_s: 3600, fresh_available: true}
+  - id: D05
+    phone_number: "+9901000005"
+    ipv4: {public_address: 192.0.2.5, public_port: 40005, private_address: 203.0.113.5}
+    ipv6: {address: "2001:db8:a:5::1", prefix: "2001:db8:a:5::/64"}
+    network_access_identifier: "dev005@nlipeval.example"
+    reachability: {state: NONE, last_status_age_s: 7200}
+    location: {city: Madrid, latitude: 40.408800, longitude: -3.715800, accuracy_m: 1200, last_location_age_s: 86400, fresh_available: true}
+  - id: D06
+    phone_number: "+9901000006"
+    ipv4: {public_address: 192.0.2.6, public_port: 40006, private_address: 203.0.113.6}
+    ipv6: {address: "2001:db8:a:6::1", prefix: "2001:db8:a:6::/64"}
+    network_access_identifier: "dev006@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 10}
+    location: {city: Rome, latitude: 41.902800, longitude: 12.502400, accuracy_m: 800, last_location_age_s: 45, fresh_available: true}
+  - id: D07
+    phone_number: "+9901000007"
+    ipv4: {public_address: 192.0.2.7, public_port: 40007, private_address: 203.0.113.7}
+    ipv6: {address: "2001:db8:a:7::1", prefix: "2001:db8:a:7::/64"}
+    network_access_identifier: "dev007@nlipeval.example"
+    reachability: {state: DATA_ONLY, last_status_age_s: 60}
+    location: {city: Amsterdam, latitude: 52.375600, longitude: 4.898100, accuracy_m: 1500, last_location_age_s: 30, fresh_available: true}
+  - id: D08
+    phone_number: "+9901000008"
+    ipv4: {public_address: 192.0.2.8, public_port: 40008, private_address: 203.0.113.8}
+    ipv6: {address: "2001:db8:a:8::1", prefix: "2001:db8:a:8::/64"}
+    network_access_identifier: "dev008@nlipeval.example"
+    reachability: {state: SMS_ONLY, last_status_age_s: 300}
+    location: {city: Warsaw, latitude: 52.225700, longitude: 21.024200, accuracy_m: 2500, last_location_age_s: 120, fresh_available: true}
+  - id: D09
+    phone_number: "+9901000009"
+    ipv4: {public_address: 192.0.2.9, public_port: 40009, private_address: 203.0.113.9}
+    ipv6: {address: "2001:db8:a:9::1", prefix: "2001:db8:a:9::/64"}
+    network_access_identifier: "dev009@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 1800}
+    location: {city: Budapest, latitude: 47.501900, longitude: 19.040200, accuracy_m: 4000, last_location_age_s: 600, fresh_available: false}
+  - id: D10
+    phone_number: "+9901000010"
+    ipv4: {public_address: 192.0.2.10, public_port: 40010, private_address: 203.0.113.10}
+    ipv6: {address: "2001:db8:a:a::1", prefix: "2001:db8:a:a::/64"}
+    network_access_identifier: "dev010@nlipeval.example"
+    reachability: {state: NONE, last_status_age_s: 7200}
+    location: {city: Zurich, latitude: 47.368900, longitude: 8.529700, accuracy_m: 1200, last_location_age_s: 3600, fresh_available: true}
+  - id: D11
+    phone_number: "+9901000011"
+    ipv4: {public_address: 192.0.2.11, public_port: 40011, private_address: 203.0.113.11}
+    ipv6: {address: "2001:db8:a:b::1", prefix: "2001:db8:a:b::/64"}
+    network_access_identifier: "dev011@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 10}
+    location: null
+  - id: D12
+    phone_number: "+9901000012"
+    ipv4: {public_address: 192.0.2.12, public_port: 40012, private_address: 203.0.113.12}
+    ipv6: {address: "2001:db8:a:c::1", prefix: "2001:db8:a:c::/64"}
+    network_access_identifier: "dev012@nlipeval.example"
+    reachability: {state: DATA_ONLY, last_status_age_s: 60}
+    location: {city: Dublin, latitude: 53.357800, longitude: -6.266300, accuracy_m: 1500, last_location_age_s: 45, fresh_available: true}
+  - id: D13
+    phone_number: "+9901000013"
+    ipv4: {public_address: 192.0.2.13, public_port: 40013, private_address: 203.0.113.13}
+    ipv6: {address: "2001:db8:a:d::1", prefix: "2001:db8:a:d::/64"}
+    network_access_identifier: "dev013@nlipeval.example"
+    reachability: {state: SMS_ONLY, last_status_age_s: 300}
+    location: {city: Bonn, latitude: 50.731851, longitude: 7.112660, accuracy_m: 2500, last_location_age_s: 30, fresh_available: true}
+  - id: D14
+    phone_number: "+9901000014"
+    ipv4: {public_address: 192.0.2.14, public_port: 40014, private_address: 203.0.113.14}
+    ipv6: {address: "2001:db8:a:e::1", prefix: "2001:db8:a:e::/64"}
+    network_access_identifier: "dev014@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 1800}
+    location: {city: Berlin, latitude: 52.524000, longitude: 13.405000, accuracy_m: 4000, last_location_age_s: 120, fresh_available: true}
+  - id: D15
+    phone_number: "+9901000015"
+    ipv4: {public_address: 192.0.2.15, public_port: 40015, private_address: 203.0.113.15}
+    ipv6: {address: "2001:db8:a:f::1", prefix: "2001:db8:a:f::/64"}
+    network_access_identifier: "dev015@nlipeval.example"
+    reachability: {state: NONE, last_status_age_s: 7200}
+    location: {city: Prague, latitude: 50.067500, longitude: 14.425800, accuracy_m: 1200, last_location_age_s: 600, fresh_available: true}
+  - id: D16
+    phone_number: "+9901000016"
+    ipv4: {public_address: 192.0.2.16, public_port: 40016, private_address: 203.0.113.16}
+    ipv6: {address: "2001:db8:a:10::1", prefix: "2001:db8:a:10::/64"}
+    network_access_identifier: "dev016@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 10}
+    location: {city: Vienna, latitude: 48.208200, longitude: 16.379800, accuracy_m: 800, last_location_age_s: 3600, fresh_available: false}
+  - id: D17
+    phone_number: "+9901000017"
+    ipv4: {public_address: 192.0.2.17, public_port: 40017, private_address: 203.0.113.17}
+    ipv6: {address: "2001:db8:a:11::1", prefix: "2001:db8:a:11::/64"}
+    network_access_identifier: "dev017@nlipeval.example"
+    reachability: {state: DATA_ONLY, last_status_age_s: 60}
+    location: {city: Paris, latitude: 48.864600, longitude: 2.346200, accuracy_m: 1500, last_location_age_s: 86400, fresh_available: true}
+  - id: D18
+    phone_number: "+9901000018"
+    ipv4: {public_address: 192.0.2.18, public_port: 40018, private_address: 203.0.113.18}
+    ipv6: {address: "2001:db8:a:12::1", prefix: "2001:db8:a:12::/64"}
+    network_access_identifier: "dev018@nlipeval.example"
+    reachability: {state: SMS_ONLY, last_status_age_s: 300}
+    location: {city: Madrid, latitude: 40.412800, longitude: -3.691800, accuracy_m: 2500, last_location_age_s: 45, fresh_available: true}
+  - id: D19
+    phone_number: "+9901000019"
+    ipv4: {public_address: 192.0.2.19, public_port: 40019, private_address: 203.0.113.19}
+    ipv6: {address: "2001:db8:a:13::1", prefix: "2001:db8:a:13::/64"}
+    network_access_identifier: "dev019@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 1800}
+    location: null
+  - id: D20
+    phone_number: "+9901000020"
+    ipv4: {public_address: 192.0.2.20, public_port: 40020, private_address: 203.0.113.20}
+    ipv6: {address: "2001:db8:a:14::1", prefix: "2001:db8:a:14::/64"}
+    network_access_identifier: "dev020@nlipeval.example"
+    reachability: {state: NONE, last_status_age_s: 7200}
+    location: {city: Amsterdam, latitude: 52.359600, longitude: 4.892100, accuracy_m: 1200, last_location_age_s: 120, fresh_available: true}
+  - id: D21
+    phone_number: "+9901000021"
+    ipv4: {public_address: 192.0.2.21, public_port: 40021, private_address: 203.0.113.21}
+    ipv6: {address: "2001:db8:a:15::1", prefix: "2001:db8:a:15::/64"}
+    network_access_identifier: "dev021@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 10}
+    location: {city: Warsaw, latitude: 52.229700, longitude: 21.018200, accuracy_m: 800, last_location_age_s: 600, fresh_available: true}
+  - id: D22
+    phone_number: "+9901000022"
+    ipv4: {public_address: 192.0.2.22, public_port: 40022, private_address: 203.0.113.22}
+    ipv6: {address: "2001:db8:a:16::1", prefix: "2001:db8:a:16::/64"}
+    network_access_identifier: "dev022@nlipeval.example"
+    reachability: {state: DATA_ONLY, last_status_age_s: 60}
+    location: {city: Budapest, latitude: 47.505900, longitude: 19.034200, accuracy_m: 1500, last_location_age_s: 3600, fresh_available: true}
+  - id: D23
+    phone_number: "+9901000023"
+    ipv4: {public_address: 192.0.2.23, public_port: 40023, private_address: 203.0.113.23}
+    ipv6: {address: "2001:db8:a:17::1", prefix: "2001:db8:a:17::/64"}
+    network_access_identifier: "dev023@nlipeval.example"
+    reachability: {state: SMS_ONLY, last_status_age_s: 300}
+    location: {city: Zurich, latitude: 47.372900, longitude: 8.553700, accuracy_m: 2500, last_location_age_s: 86400, fresh_available: false}
+  - id: D24
+    phone_number: "+9901000024"
+    ipv4: {public_address: 192.0.2.24, public_port: 40024, private_address: 203.0.113.24}
+    ipv6: {address: "2001:db8:a:18::1", prefix: "2001:db8:a:18::/64"}
+    network_access_identifier: "dev024@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 1800}
+    location: {city: Lisbon, latitude: 38.726300, longitude: -9.139300, accuracy_m: 4000, last_location_age_s: 45, fresh_available: true}
+  - id: D25
+    phone_number: "+9901000025"
+    ipv4: {public_address: 192.0.2.25, public_port: 40025, private_address: 203.0.113.25}
+    ipv6: {address: "2001:db8:a:19::1", prefix: "2001:db8:a:19::/64"}
+    network_access_identifier: "dev025@nlipeval.example"
+    reachability: {state: NONE, last_status_age_s: 7200}
+    location: {city: Dublin, latitude: 53.341800, longitude: -6.272300, accuracy_m: 1200, last_location_age_s: 30, fresh_available: true}
+  - id: D26
+    phone_number: "+9901000026"
+    ipv4: {public_address: 192.0.2.26, public_port: 40026, private_address: 203.0.113.26}
+    ipv6: {address: "2001:db8:a:1a::1", prefix: "2001:db8:a:1a::/64"}
+    network_access_identifier: "dev026@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 10}
+    location: {city: Bonn, latitude: 50.735851, longitude: 7.106660, accuracy_m: 800, last_location_age_s: 120, fresh_available: true}
+  - id: D27
+    phone_number: "+9901000027"
+    ipv4: {public_address: 192.0.2.27, public_port: 40027, private_address: 203.0.113.27}
+    ipv6: {address: "2001:db8:a:1b::1", prefix: "2001:db8:a:1b::/64"}
+    network_access_identifier: "dev027@nlipeval.example"
+    reachability: {state: DATA_ONLY, last_status_age_s: 60}
+    location: null
+  - id: D28
+    phone_number: "+9901000028"
+    ipv4: {public_address: 192.0.2.28, public_port: 40028, private_address: 203.0.113.28}
+    ipv6: {address: "2001:db8:a:1c::1", prefix: "2001:db8:a:1c::/64"}
+    network_access_identifier: "dev028@nlipeval.example"
+    reachability: {state: SMS_ONLY, last_status_age_s: 300}
+    location: {city: Prague, latitude: 50.071500, longitude: 14.449800, accuracy_m: 2500, last_location_age_s: 3600, fresh_available: true}
+  - id: D29
+    phone_number: "+9901000029"
+    ipv4: {public_address: 192.0.2.29, public_port: 40029, private_address: 203.0.113.29}
+    ipv6: {address: "2001:db8:a:1d::1", prefix: "2001:db8:a:1d::/64"}
+    network_access_identifier: "dev029@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 1800}
+    location: {city: Vienna, latitude: 48.212200, longitude: 16.373800, accuracy_m: 4000, last_location_age_s: 86400, fresh_available: true}
+  - id: D30
+    phone_number: "+9901000030"
+    ipv4: {public_address: 192.0.2.30, public_port: 40030, private_address: 203.0.113.30}
+    ipv6: {address: "2001:db8:a:1e::1", prefix: "2001:db8:a:1e::/64"}
+    network_access_identifier: "dev030@nlipeval.example"
+    reachability: {state: NONE, last_status_age_s: 7200}
+    location: {city: Paris, latitude: 48.848600, longitude: 2.340200, accuracy_m: 1200, last_location_age_s: 45, fresh_available: false}
+  - id: D31
+    phone_number: "+9901000031"
+    ipv4: {public_address: 192.0.2.1, public_port: 40031, private_address: 203.0.113.31}
+    ipv6: {address: "2001:db8:a:1f::1", prefix: "2001:db8:a:1f::/64"}
+    network_access_identifier: "dev031@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 10}
+    location: {city: Madrid, latitude: 40.416800, longitude: -3.697800, accuracy_m: 800, last_location_age_s: 30, fresh_available: true}
+  - id: D32
+    phone_number: "+9901000032"
+    ipv4: {public_address: 192.0.2.2, public_port: 40032, private_address: 203.0.113.32}
+    ipv6: {address: "2001:db8:a:20::1", prefix: "2001:db8:a:20::/64"}
+    network_access_identifier: "dev032@nlipeval.example"
+    reachability: {state: DATA_ONLY, last_status_age_s: 60}
+    location: {city: Rome, latitude: 41.910800, longitude: 12.490400, accuracy_m: 1500, last_location_age_s: 120, fresh_available: true}
+  - id: D33
+    phone_number: "+9901000033"
+    ipv4: {public_address: 192.0.2.3, public_port: 40033, private_address: 203.0.113.33}
+    ipv6: {address: "2001:db8:a:21::1", prefix: "2001:db8:a:21::/64"}
+    network_access_identifier: "dev033@nlipeval.example"
+    reachability: {state: SMS_ONLY, last_status_age_s: 300}
+    location: {city: Amsterdam, latitude: 52.363600, longitude: 4.916100, accuracy_m: 2500, last_location_age_s: 600, fresh_available: true}
+  - id: D34
+    phone_number: "+9901000034"
+    ipv4: {public_address: 192.0.2.4, public_port: 40034, private_address: 203.0.113.34}
+    ipv6: {address: "2001:db8:a:22::1", prefix: "2001:db8:a:22::/64"}
+    network_access_identifier: "dev034@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 1800}
+    location: {city: Warsaw, latitude: 52.233700, longitude: 21.012200, accuracy_m: 4000, last_location_age_s: 3600, fresh_available: true}
+  - id: D35
+    phone_number: "+9901000035"
+    ipv4: {public_address: 192.0.2.5, public_port: 40035, private_address: 203.0.113.35}
+    ipv6: {address: "2001:db8:a:23::1", prefix: "2001:db8:a:23::/64"}
+    network_access_identifier: "dev035@nlipeval.example"
+    reachability: {state: NONE, last_status_age_s: 7200}
+    location: null
+  - id: D36
+    phone_number: "+9901000036"
+    ipv4: {public_address: 192.0.2.6, public_port: 40036, private_address: 203.0.113.36}
+    ipv6: {address: "2001:db8:a:24::1", prefix: "2001:db8:a:24::/64"}
+    network_access_identifier: "dev036@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 10}
+    location: {city: Zurich, latitude: 47.376900, longitude: 8.547700, accuracy_m: 800, last_location_age_s: 45, fresh_available: true}
+  - id: D37
+    phone_number: "+9901000037"
+    ipv4: {public_address: 192.0.2.7, public_port: 40037, private_address: 203.0.113.37}
+    ipv6: {address: "2001:db8:a:25::1", prefix: "2001:db8:a:25::/64"}
+    network_access_identifier: "dev037@nlipeval.example"
+    reachability: {state: DATA_ONLY, last_status_age_s: 60}
+    location: {city: Lisbon, latitude: 38.730300, longitude: -9.145300, accuracy_m: 1500, last_location_age_s: 30, fresh_available: false}
+  - id: D38
+    phone_number: "+9901000038"
+    ipv4: {public_address: 192.0.2.8, public_port: 40038, private_address: 203.0.113.38}
+    ipv6: {address: "2001:db8:a:26::1", prefix: "2001:db8:a:26::/64"}
+    network_access_identifier: "dev038@nlipeval.example"
+    reachability: {state: SMS_ONLY, last_status_age_s: 300}
+    location: {city: Dublin, latitude: 53.345800, longitude: -6.248300, accuracy_m: 2500, last_location_age_s: 120, fresh_available: true}
+  - id: D39
+    phone_number: "+9901000039"
+    ipv4: {public_address: 192.0.2.9, public_port: 40039, private_address: 203.0.113.39}
+    ipv6: {address: "2001:db8:a:27::1", prefix: "2001:db8:a:27::/64"}
+    network_access_identifier: "dev039@nlipeval.example"
+    reachability: {state: DATA_SMS, last_status_age_s: 1800}
+    location: {city: Bonn, latitude: 50.739851, longitude: 7.100660, accuracy_m: 4000, last_location_age_s: 600, fresh_available: true}
+  - id: D40
+    phone_number: "+9901000040"
+    ipv4: {public_address: 192.0.2.10, public_port: 40040, private_address: 203.0.113.40}
+    ipv6: {address: "2001:db8:a:28::1", prefix: "2001:db8:a:28::/64"}
+    network_access_identifier: "dev040@nlipeval.example"
+    reachability: {state: NONE, last_status_age_s: 7200}
+    location: {city: Berlin, latitude: 52.512000, longitude: 13.393000, accuracy_m: 1200, last_location_age_s: 3600, fresh_available: true}

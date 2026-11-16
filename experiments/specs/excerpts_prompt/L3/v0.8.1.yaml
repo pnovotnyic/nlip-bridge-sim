@@ -1,0 +1,880 @@
+openapi: 3.0.3
+info:
+  title: QoD for enhanced communication
+  version: 0.8.1
+paths:
+  /sessions:
+    post:
+      tags:
+      - QoS sessions
+      summary: Creates a new session
+      description: Creates a new QoS session on demand
+      operationId: createSession
+      requestBody:
+        description: Creates a new session
+        content:
+          application/json:
+            schema:
+              description: Data type with attributes required for creating a session
+              type: object
+              properties:
+                duration:
+                  type: integer
+                  description: 'Session duration in seconds. Maximal value of 24 hours is used if not set.
+
+                    After session has expired the client will receive SESSION_TERMINATED event. See notification callback.
+
+                    '
+                  format: int32
+                  minimum: 1
+                  maximum: 86400
+                  default: 86400
+                ueId:
+                  type: object
+                  minProperties: 1
+                  properties:
+                    externalId:
+                      type: string
+                    msisdn:
+                      type: string
+                      pattern: ^\+?[0-9]{5,15}$
+                      description: Subscriber number in E.164 format (starting with country code). Optionally prefixed with
+                        '+'.
+                    ipv4addr:
+                      type: string
+                      format: ipv4
+                      pattern: ^([01]?\d\d?|2[0-4]\d|25[0-5])(?:\.(?:[01]?\d\d?|2[0-4]\d|25[0-5])){3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+                      description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                        \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n  - address/mask\
+                        \ - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this case, all IP numbers\
+                        \ from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the IP version.\n"
+                    ipv6addr:
+                      type: string
+                      format: ipv6
+                      allOf:
+                      - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                      - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                      description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask> as:\n\
+                        \  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                        \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                        \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                  description: User equipment identifier
+                asId:
+                  type: object
+                  minProperties: 1
+                  properties:
+                    ipv4addr:
+                      type: string
+                      format: ipv4
+                      pattern: ^([01]?\d\d?|2[0-4]\d|25[0-5])(?:\.(?:[01]?\d\d?|2[0-4]\d|25[0-5])){3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+                      description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                        \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n  - address/mask\
+                        \ - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this case, all IP numbers\
+                        \ from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the IP version.\n"
+                    ipv6addr:
+                      type: string
+                      format: ipv6
+                      allOf:
+                      - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                      - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                      description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask> as:\n\
+                        \  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                        \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                        \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                  description: Application server identifier
+                uePorts:
+                  type: object
+                  minProperties: 1
+                  properties:
+                    ranges:
+                      type: array
+                      minItems: 1
+                      items:
+                        type: object
+                        required:
+                        - from
+                        - to
+                        properties:
+                          from:
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                          to:
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                    ports:
+                      type: array
+                      minItems: 1
+                      items:
+                        type: integer
+                        minimum: 0
+                        maximum: 65535
+                  description: 'Ports may be specified as a list of ranges or single ports.
+
+                    '
+                asPorts:
+                  type: object
+                  minProperties: 1
+                  properties:
+                    ranges:
+                      type: array
+                      minItems: 1
+                      items:
+                        type: object
+                        required:
+                        - from
+                        - to
+                        properties:
+                          from:
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                          to:
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                    ports:
+                      type: array
+                      minItems: 1
+                      items:
+                        type: integer
+                        minimum: 0
+                        maximum: 65535
+                  description: 'Ports may be specified as a list of ranges or single ports.
+
+                    '
+                qos:
+                  type: string
+                  enum:
+                  - QOS_E
+                  - QOS_S
+                  - QOS_M
+                  - QOS_L
+                  description: '* `QOS_E` - Qualifier for enhanced communication profile
+
+                    * `QOS_S` - Qualifier for the requested QoS profile _S_
+
+                    * `QOS_M` - Qualifier for the requested QoS profile _M_
+
+                    * `QOS_L` - Qualifier for the requested QoS profile _L_
+
+                    '
+                notificationUrl:
+                  type: string
+                  format: uri
+                  description: Allows asynchronous delivery of session related events
+                notificationAuthToken:
+                  type: string
+                  description: Authentication token for callback API
+              required:
+              - ueId
+              - asId
+              - qos
+        required: true
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                description: Session related information.
+                allOf:
+                - description: Data type with attributes required for creating a session
+                  type: object
+                  properties:
+                    duration:
+                      type: integer
+                      description: 'Session duration in seconds. Maximal value of 24 hours is used if not set.
+
+                        After session has expired the client will receive SESSION_TERMINATED event. See notification callback.
+
+                        '
+                      format: int32
+                      minimum: 1
+                      maximum: 86400
+                      default: 86400
+                    ueId:
+                      type: object
+                      minProperties: 1
+                      properties:
+                        externalId:
+                          type: string
+                        msisdn:
+                          type: string
+                          pattern: ^\+?[0-9]{5,15}$
+                          description: Subscriber number in E.164 format (starting with country code). Optionally prefixed
+                            with '+'.
+                        ipv4addr:
+                          type: string
+                          format: ipv4
+                          pattern: ^([01]?\d\d?|2[0-4]\d|25[0-5])(?:\.(?:[01]?\d\d?|2[0-4]\d|25[0-5])){3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+                          description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                            \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n \
+                            \ - address/mask - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this\
+                            \ case, all IP numbers from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the\
+                            \ IP version.\n"
+                        ipv6addr:
+                          type: string
+                          format: ipv6
+                          allOf:
+                          - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                          - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                          description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask>\
+                            \ as:\n  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                            \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                            \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                      description: User equipment identifier
+                    asId:
+                      type: object
+                      minProperties: 1
+                      properties:
+                        ipv4addr:
+                          type: string
+                          format: ipv4
+                          pattern: ^([01]?\d\d?|2[0-4]\d|25[0-5])(?:\.(?:[01]?\d\d?|2[0-4]\d|25[0-5])){3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+                          description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                            \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n \
+                            \ - address/mask - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this\
+                            \ case, all IP numbers from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the\
+                            \ IP version.\n"
+                        ipv6addr:
+                          type: string
+                          format: ipv6
+                          allOf:
+                          - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                          - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                          description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask>\
+                            \ as:\n  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                            \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                            \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                      description: Application server identifier
+                    uePorts:
+                      type: object
+                      minProperties: 1
+                      properties:
+                        ranges:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: object
+                            required:
+                            - from
+                            - to
+                            properties:
+                              from:
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                              to:
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                        ports:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                      description: 'Ports may be specified as a list of ranges or single ports.
+
+                        '
+                    asPorts:
+                      type: object
+                      minProperties: 1
+                      properties:
+                        ranges:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: object
+                            required:
+                            - from
+                            - to
+                            properties:
+                              from:
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                              to:
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                        ports:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                      description: 'Ports may be specified as a list of ranges or single ports.
+
+                        '
+                    qos:
+                      type: string
+                      enum:
+                      - QOS_E
+                      - QOS_S
+                      - QOS_M
+                      - QOS_L
+                      description: '* `QOS_E` - Qualifier for enhanced communication profile
+
+                        * `QOS_S` - Qualifier for the requested QoS profile _S_
+
+                        * `QOS_M` - Qualifier for the requested QoS profile _M_
+
+                        * `QOS_L` - Qualifier for the requested QoS profile _L_
+
+                        '
+                    notificationUrl:
+                      type: string
+                      format: uri
+                      description: Allows asynchronous delivery of session related events
+                    notificationAuthToken:
+                      type: string
+                      description: Authentication token for callback API
+                  required:
+                  - ueId
+                  - asId
+                  - qos
+                - type: object
+                  required:
+                  - id
+                  - duration
+                  - startedAt
+                  - expiresAt
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: Session ID in UUID format
+                    startedAt:
+                      type: integer
+                      description: Timestamp of session start in seconds since unix epoch
+                      format: int64
+                    expiresAt:
+                      type: integer
+                      description: Timestamp of session expiration if the session was not deleted, in seconds since unix epoch
+                      format: int64
+                    messages:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          severity:
+                            type: string
+                            enum:
+                            - INFO
+                            - WARNING
+                            description: Message severity
+                          description:
+                            type: string
+                            description: Detailed message text
+                        required:
+                        - severity
+                        - description
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+      callbacks:
+        notifications:
+          '{$request.body#/notificationUrl}/notifications':
+            post:
+              summary: Session notifications callback
+  /sessions/{sessionId}:
+    get:
+      tags:
+      - QoS sessions
+      summary: Get session information
+      operationId: getSession
+      parameters:
+      - name: sessionId
+        in: path
+        description: Session ID that was obtained from the createSession operation
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: Session ID in UUID format
+      responses:
+        '200':
+          description: Contains information about active session
+          content:
+            application/json:
+              schema:
+                description: Session related information.
+                allOf:
+                - description: Data type with attributes required for creating a session
+                  type: object
+                  properties:
+                    duration:
+                      type: integer
+                      description: 'Session duration in seconds. Maximal value of 24 hours is used if not set.
+
+                        After session has expired the client will receive SESSION_TERMINATED event. See notification callback.
+
+                        '
+                      format: int32
+                      minimum: 1
+                      maximum: 86400
+                      default: 86400
+                    ueId:
+                      type: object
+                      minProperties: 1
+                      properties:
+                        externalId:
+                          type: string
+                        msisdn:
+                          type: string
+                          pattern: ^\+?[0-9]{5,15}$
+                          description: Subscriber number in E.164 format (starting with country code). Optionally prefixed
+                            with '+'.
+                        ipv4addr:
+                          type: string
+                          format: ipv4
+                          pattern: ^([01]?\d\d?|2[0-4]\d|25[0-5])(?:\.(?:[01]?\d\d?|2[0-4]\d|25[0-5])){3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+                          description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                            \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n \
+                            \ - address/mask - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this\
+                            \ case, all IP numbers from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the\
+                            \ IP version.\n"
+                        ipv6addr:
+                          type: string
+                          format: ipv6
+                          allOf:
+                          - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                          - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                          description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask>\
+                            \ as:\n  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                            \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                            \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                      description: User equipment identifier
+                    asId:
+                      type: object
+                      minProperties: 1
+                      properties:
+                        ipv4addr:
+                          type: string
+                          format: ipv4
+                          pattern: ^([01]?\d\d?|2[0-4]\d|25[0-5])(?:\.(?:[01]?\d\d?|2[0-4]\d|25[0-5])){3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+                          description: "IPv4 address may be specified in form <address/mask> as:\n  - address - an IPv4 number\
+                            \ in dotted-quad form 1.2.3.4. Only this exact IP number will match the flow control rule.\n \
+                            \ - address/mask - an IP number as above with a mask width of the form 1.2.3.4/24.\n    In this\
+                            \ case, all IP numbers from 1.2.3.0 to 1.2.3.255 will match. The bit width MUST be valid for the\
+                            \ IP version.\n"
+                        ipv6addr:
+                          type: string
+                          format: ipv6
+                          allOf:
+                          - pattern: ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?$
+                          - pattern: ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)?$
+                          description: "IPv6 address, following IETF 5952 format, may be specified in form <address/mask>\
+                            \ as:\n  - address - The /128 subnet is optional for single addresses:\n    - 2001:db8:85a3:8d3:1319:8a2e:370:7344\n\
+                            \    - 2001:db8:85a3:8d3:1319:8a2e:370:7344/128\n  - address/mask - an IP v6 number with a mask:\n\
+                            \    - 2001:db8:85a3:8d3::0/64\n    - 2001:db8:85a3:8d3::/64\n"
+                      description: Application server identifier
+                    uePorts:
+                      type: object
+                      minProperties: 1
+                      properties:
+                        ranges:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: object
+                            required:
+                            - from
+                            - to
+                            properties:
+                              from:
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                              to:
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                        ports:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                      description: 'Ports may be specified as a list of ranges or single ports.
+
+                        '
+                    asPorts:
+                      type: object
+                      minProperties: 1
+                      properties:
+                        ranges:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: object
+                            required:
+                            - from
+                            - to
+                            properties:
+                              from:
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                              to:
+                                type: integer
+                                minimum: 0
+                                maximum: 65535
+                        ports:
+                          type: array
+                          minItems: 1
+                          items:
+                            type: integer
+                            minimum: 0
+                            maximum: 65535
+                      description: 'Ports may be specified as a list of ranges or single ports.
+
+                        '
+                    qos:
+                      type: string
+                      enum:
+                      - QOS_E
+                      - QOS_S
+                      - QOS_M
+                      - QOS_L
+                      description: '* `QOS_E` - Qualifier for enhanced communication profile
+
+                        * `QOS_S` - Qualifier for the requested QoS profile _S_
+
+                        * `QOS_M` - Qualifier for the requested QoS profile _M_
+
+                        * `QOS_L` - Qualifier for the requested QoS profile _L_
+
+                        '
+                    notificationUrl:
+                      type: string
+                      format: uri
+                      description: Allows asynchronous delivery of session related events
+                    notificationAuthToken:
+                      type: string
+                      description: Authentication token for callback API
+                  required:
+                  - ueId
+                  - asId
+                  - qos
+                - type: object
+                  required:
+                  - id
+                  - duration
+                  - startedAt
+                  - expiresAt
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: Session ID in UUID format
+                    startedAt:
+                      type: integer
+                      description: Timestamp of session start in seconds since unix epoch
+                      format: int64
+                    expiresAt:
+                      type: integer
+                      description: Timestamp of session expiration if the session was not deleted, in seconds since unix epoch
+                      format: int64
+                    messages:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          severity:
+                            type: string
+                            enum:
+                            - INFO
+                            - WARNING
+                            description: Message severity
+                          description:
+                            type: string
+                            description: Detailed message text
+                        required:
+                        - severity
+                        - description
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+    delete:
+      tags:
+      - QoS sessions
+      summary: Free resources related to QoS session
+      operationId: deleteSession
+      parameters:
+      - name: sessionId
+        in: path
+        description: Session ID that was obtained from the createSession operation
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: Session ID in UUID format
+      responses:
+        '204':
+          description: Session deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                properties:
+                  code:
+                    type: string
+                    description: Code given to this error
+                  message:
+                    type: string
+                    description: Detailed error description
+servers:
+- url: '{apiRoot}/{basePath}'
+  variables:
+    apiRoot:
+      default: http://localhost:9091
+      description: API root
+    basePath:
+      default: qod/v0
+      description: Base path for the QoD API
