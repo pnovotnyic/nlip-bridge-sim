@@ -15,7 +15,7 @@ from __future__ import annotations
 NAI_ONLY = "network_access_identifier"
 
 # Versions whose phone pattern allows numbers without "+" and whose native request omits it for
-# even-numbered intents (07b A10, review decision 3).
+# intents whose number mod 4 is 1 or 2 (08a D11, which replaces the even-number rule of 07b A10).
 PHONE_WITHOUT_PLUS = {("L1", "v0.5.1"), ("L2", "v0.1.0"), ("L3", "v0.8.1")}
 
 
@@ -53,7 +53,7 @@ def intent_number(intent: dict) -> int:
 
 def phone_plus(api: str, version: str, intent: dict) -> bool:
     """Whether the native request carries the phone number with its leading "+"."""
-    if (api, version) in PHONE_WITHOUT_PLUS and intent_number(intent) % 2 == 0:
+    if (api, version) in PHONE_WITHOUT_PLUS and intent_number(intent) % 4 in (1, 2):
         return False
     return True
 

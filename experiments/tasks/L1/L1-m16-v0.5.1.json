@@ -10,7 +10,7 @@
   "versions_behind": 2,
   "breaking_crossed": 8,
   "breaking_crossed_ops": 3,
-  "catalogue_breaking_crossed": 4,
+  "catalogue_breaking_crossed": 3,
   "prompt_half": false,
   "pilot_round": null,
   "intent_text": "Is phone +9901000016 currently reachable?",
@@ -19,7 +19,7 @@
     "path": "/device-status/v0/connectivity",
     "body": {
       "device": {
-        "phoneNumber": "9901000016"
+        "phoneNumber": "+9901000016"
       }
     }
   },
@@ -70,15 +70,19 @@
     "status": "done",
     "result": {
       "connectivityStatus": "CONNECTED_DATA"
-    }
+    },
+    "alternatives": [
+      {
+        "connectivityStatus": "CONNECTED_SMS"
+      }
+    ]
   },
   "expected_refusal": null,
   "refusal_predictable": false,
   "missing_info": [],
   "missing_info_source": {},
   "change_tags_request": [
-    "renamed",
-    "unit_format"
+    "renamed"
   ],
   "change_tags_response": [
     "renamed",

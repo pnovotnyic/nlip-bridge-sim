@@ -61,9 +61,6 @@
         "type": "integer",
         "minimum": 1,
         "maximum": 99
-      },
-      "device": {
-        "type": "object"
       }
     }
   },

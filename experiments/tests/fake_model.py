@@ -244,6 +244,10 @@ NLIP_ABORT = [
         "plan": None, "asked_fields": ["device.phoneNumber"]}},
     {"role": "client", "reply": {
         "action": "abort", "message": "Never mind.", "final": None}},
+    # B7: after an abort the client still gives its final
+    {"role": "client", "reply": {
+        "action": "final", "message": "",
+        "final": {"status": "declined", "result": None, "explanation": "aborted"}}},
 ]
 
 # NLIP: server decline

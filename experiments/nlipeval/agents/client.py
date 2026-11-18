@@ -50,6 +50,7 @@ class ClientAgent:
         self.system_prompt = system_prompt
         self.session_id = session_id
         self._call_count = 0
+        self.n_action_repairs = 0   # B6: repair messages sent for a disallowed action
 
     def turn(
         self,

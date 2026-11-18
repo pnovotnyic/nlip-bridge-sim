@@ -76,7 +76,12 @@
     "status": "done",
     "result": {
       "connectivityStatus": "CONNECTED_DATA"
-    }
+    },
+    "alternatives": [
+      {
+        "connectivityStatus": "CONNECTED_SMS"
+      }
+    ]
   },
   "expected_refusal": null,
   "refusal_predictable": false,

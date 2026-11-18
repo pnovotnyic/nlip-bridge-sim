@@ -1,0 +1,36 @@
+# Stage 08 pilot, R1 slice (Ollama). Same parts, task filters, prompts and conditions as pilot.yaml,
+# with the rungs restricted to R1, so the R1 sessions are identical to the pilot's R1 sessions.
+# pilot-rits.yaml has the R2-R4 slice; the two together are pilot.yaml.
+#   Part A: R1, P2, NLIP and NLIP-0 on 45 round-A instances = 90 sessions
+#   Part B: R1, P1 and P3, NLIP only, on the 15 L3 round-A instances = 30 sessions
+# Start the R1 server with scripts/start_ollama_r1.sh, then:
+#   caffeinate -i uv run python -m nlipeval.runner.run --matrix config/runs/pilot-r1.yaml
+# The run ID is generated (<UTC YYYYMMDD-HHMM>-stage8-pilot-r1). To resume an interrupted run, start
+# the R1 server again and add --run-id <that run ID>; completed sessions are skipped.
+# The session wall-time limit is per rung (config/models.yaml: session_limit_s).
+
+run_id: null
+label: pilot-r1
+stage: stage8
+attempt: 1
+
+parts:
+  - name: A
+    task_filter:
+      apis: [L1, L2, L3]
+      pilot_round: A
+    rungs: [R1]
+    prompts: [P2]
+    conditions: [NLIP, NLIP-0]
+  - name: B
+    task_filter:
+      apis: [L3]
+      pilot_round: A
+    rungs: [R1]
+    prompts: [P1, P3]
+    conditions: [NLIP]
+
+concurrency:
+  R1: 1
+
+budget_calls: 20000

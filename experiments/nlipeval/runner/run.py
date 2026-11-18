@@ -4,7 +4,12 @@ Reads a matrix YAML, starts the backends, runs sessions concurrently per rung, a
 the four log files (manifest.json, sessions.jsonl, calls.jsonl, wire.jsonl).
 
 The session key is (task_id, rung, prompt, condition, attempt). Keys already in
-sessions.jsonl are skipped (resumable).
+sessions.jsonl are skipped (resumable): resume an interrupted run with `--run-id <run_id>` (or a
+fixed `run_id` in the matrix). A run is resumed only on the same commit and inputs (08a H1).
+
+Provenance (08a H1): the manifest records `git_dirty` and `git_dirty_paths`, the uncommitted
+changes under the paths that affect agent inputs, outputs or scoring. A run does not start with
+such changes unless the matrix sets `allow_dirty: true` (test runs only).
 
 Budget guard: stops cleanly once `budget_calls` model calls have been made.
 Schema warm-up: before the first real session, sends one short call per JSON schema per rung.
@@ -340,6 +345,8 @@ def _run_one(
         "n_restatements": outcome.n_restatements,
         "n_server_retries": outcome.n_server_retries,
         "n_protocol_slips": outcome.n_protocol_slips,
+        "n_action_repairs_client": outcome.n_action_repairs_client,
+        "n_action_repairs_server": outcome.n_action_repairs_server,
         "timeout_rerun": timeout_rerun,
         "plans": [
             {"turn": p.turn, "action": p.action,
@@ -369,11 +376,18 @@ def _run_one(
 
 # --------------------------------------------------------------------------- main
 
-def run(matrix_path: Path, dry_run: bool = False) -> None:
+def run(matrix_path: Path, dry_run: bool = False, run_id: str | None = None) -> None:
     matrix = yaml.safe_load(matrix_path.read_text())
-    run_id = matrix.get("run_id") or (
-        datetime.now(timezone.utc).strftime("%Y%m%d-%H%M") + "-stage6-" + matrix.get("label", "run")
-    )
+    stage = matrix.get("stage", "stage6")
+    run_id = _make_run_id(matrix, run_id)
+
+    # 08a H1: no run on uncommitted inputs, unless the matrix is a test that allows it
+    dirty = _git_dirty_paths()
+    if dirty and not dry_run and not matrix.get("allow_dirty", False):
+        raise SystemExit(
+            f"Uncommitted changes in {len(dirty)} input paths, for example {dirty[:5]}. "
+            "Commit them first, or set allow_dirty: true in the matrix of a test run."
+        )
 
     cfg_rungs = yaml.safe_load((CONFIG_DIR / "models.yaml").read_text())["rungs"]
     parts = _parts(matrix)
@@ -384,7 +398,6 @@ def run(matrix_path: Path, dry_run: bool = False) -> None:
     concurrency_per_rung = matrix.get("concurrency", {r: cfg_rungs[r].get("max_concurrency", 1) for r in rungs})
     budget_calls = matrix.get("budget_calls", 10_000)
     matrix_limit_s = matrix.get("wall_time_limit_s")      # optional override of the per-rung session_limit_s
-    stage = matrix.get("stage", "stage6")
 
     # R5 guard
     if "R5" in rungs and stage != "stage14":
@@ -438,6 +451,8 @@ def run(matrix_path: Path, dry_run: bool = False) -> None:
         "stage": stage,
         "created_utc": _utc_now(),
         "git_commit": _git_commit(),
+        "git_dirty": None if dirty is None else bool(dirty),
+        "git_dirty_paths": dirty,
         "config_hash": _sha256_dir(CONFIG_DIR),
         "prompts_hash": prompts_hash(),
         "tasks_hash": _sha256_dir(TASKS_DIR),
@@ -456,12 +471,13 @@ def run(matrix_path: Path, dry_run: bool = False) -> None:
         "packages": _package_versions(),
         "serving": serving_info,
     }
-    (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
-
     if dry_run:
         n = sum(len(_load_part_tasks(pt, bool(matrix.get("allow_round_b", False)))) * len(pt.get("rungs", matrix.get("rungs", []))) * len(pt.get("prompts", ["P2"])) * len(pt.get("conditions", ["NLIP", "NLIP-0"])) for pt in parts)
         print(f"Dry run: {run_id}, {len(tasks)} tasks, {n} sessions, rungs {rungs}")
         return
+
+    _check_resume(run_dir / "manifest.json", manifest, matrix)
+    (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
     sessions_log = _Logger(run_dir / "sessions.jsonl")
     wire_log = _Logger(run_dir / "wire.jsonl")
@@ -515,7 +531,8 @@ def run(matrix_path: Path, dry_run: bool = False) -> None:
                 "started_utc": _utc_now(), "ended_utc": _utc_now(), "wall_seconds": 0.0,
                 "termination": "error_harness",
                 "n_interactions": 0, "n_questions": 0, "n_corrections": 0,
-                "n_restatements": 0, "n_server_retries": 0, "n_protocol_slips": 0, "timeout_rerun": None,
+                "n_restatements": 0, "n_server_retries": 0, "n_protocol_slips": 0,
+                "n_action_repairs_client": 0, "n_action_repairs_server": 0, "timeout_rerun": None,
                 "plans": [], "executed_calls": [], "client_final": None,
                 "calls_client": 0, "calls_server": 0,
                 "tokens": {"client_in": None, "client_out": None,
@@ -564,7 +581,8 @@ def run(matrix_path: Path, dry_run: bool = False) -> None:
         ex.shutdown(wait=True)
 
     print(f"[{run_id}] done. Sessions: {done_count[0]}. Run dir: {run_dir}")
-    _update_runs_registry(run_id, run_dir, stage, done_count[0])
+    _update_runs_registry(run_id, run_dir, stage, done_count[0],
+                          "test" if matrix.get("allow_dirty", False) else None)
 
 
 def _try_score(run_dir: Path) -> None:
@@ -584,7 +602,53 @@ def _git_commit() -> str | None:
         return None
 
 
-def _update_runs_registry(run_id: str, run_dir: Path, stage: str, n_sessions: int) -> None:
+def _make_run_id(matrix: dict, run_id: str | None = None) -> str:
+    """The `--run-id` given, else the matrix's `run_id`, else `<UTC YYYYMMDD-HHMM>-<stage>-<label>` (08a H2)."""
+    return run_id or matrix.get("run_id") or (
+        datetime.now(timezone.utc).strftime("%Y%m%d-%H%M")
+        + f"-{matrix.get('stage', 'stage6')}-{matrix.get('label', 'run')}"
+    )
+
+
+# Manifest fields that must not change when a run is resumed (08a H1).
+PROVENANCE_KEYS = ("git_commit", "config_hash", "prompts_hash", "tasks_hash", "world_hash", "specs_hash")
+
+# Paths whose uncommitted changes would make `git_commit` an incomplete record of what ran (08a H1).
+GIT_INPUT_PATHS = ("nlipeval", "prompts", "tasks", "config", "specs", "scripts", "pyproject.toml", "uv.lock")
+
+
+def _git_dirty_paths() -> list[str] | None:
+    """Uncommitted changes, untracked files included, under GIT_INPUT_PATHS. None if git is unavailable."""
+    try:
+        out = subprocess.check_output(
+            ["git", "status", "--porcelain", "--untracked-files=all", "--", *GIT_INPUT_PATHS],
+            cwd=ROOT, text=True,
+        )
+    except Exception:
+        return None
+    return [line[3:] for line in out.splitlines() if line.strip()]
+
+
+def _check_resume(manifest_path: Path, manifest: dict, matrix: dict) -> None:
+    """A run that already has a manifest is resumed only with the same commit and inputs (08a H1).
+
+    On a resume the first `created_utc` is kept and the time of each resume is added to `resumed_utc`.
+    """
+    if not manifest_path.exists():
+        return
+    old = json.loads(manifest_path.read_text())
+    changed = [k for k in PROVENANCE_KEYS if old.get(k) != manifest.get(k)]
+    if changed and not matrix.get("allow_dirty", False):
+        raise SystemExit(
+            f"Run {manifest['run_id']} already exists with a different {', '.join(changed)}. "
+            "Resume it only on the same commit and inputs, or start a new run ID."
+        )
+    manifest["created_utc"] = old.get("created_utc", manifest["created_utc"])
+    manifest["resumed_utc"] = list(old.get("resumed_utc", [])) + [_utc_now()]
+
+
+def _update_runs_registry(run_id: str, run_dir: Path, stage: str, n_sessions: int,
+                          status: str | None = None) -> None:
     RUNS_REGISTRY.parent.mkdir(parents=True, exist_ok=True)
     sessions_path = run_dir / "sessions.jsonl"
     calls_path = run_dir / "calls.jsonl"
@@ -593,7 +657,7 @@ def _update_runs_registry(run_id: str, run_dir: Path, stage: str, n_sessions: in
     commit = _git_commit() or "unknown"
     row = (
         f"| {run_id} | {stage} | {_utc_now()[:10]} | {commit[:7]} "
-        f"| {'smoke' if stage == 'smoke' else 'valid'} | {n_sessions} | {sha_sessions[:8]} | {sha_calls[:8]} |\n"
+        f"| {status or ('smoke' if stage == 'smoke' else 'valid')} | {n_sessions} | {sha_sessions[:8]} | {sha_calls[:8]} |\n"
     )
     if not RUNS_REGISTRY.exists():
         RUNS_REGISTRY.write_text(
@@ -609,8 +673,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--matrix", required=True, type=Path)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--run-id", default=None,
+                    help="run ID to use instead of the matrix's; give an existing one to resume that run")
     args = ap.parse_args()
-    run(args.matrix, dry_run=args.dry_run)
+    run(args.matrix, dry_run=args.dry_run, run_id=args.run_id)
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@
     "body": {
       "duration": 1200,
       "ueId": {
-        "msisdn": "+9901000001"
+        "msisdn": "9901000001"
       },
       "asId": {
         "ipv4addr": "198.51.100.20"
@@ -52,9 +52,6 @@
       },
       "duration": {
         "type": "integer"
-      },
-      "ueId": {
-        "type": "object"
       },
       "asId": {
         "type": "object"

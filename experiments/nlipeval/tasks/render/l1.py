@@ -7,7 +7,7 @@ render_answer(world_outcome, version)  -> {status, result}
 Change catalogue entries implemented:
   - [renamed] POST /connectivity -> POST /retrieve (v0.5.1 -> v0.6.0, L1-C1)
   - [unit_format] phoneNumber pattern tightened at v1.0.0 (L1-C2): at v0.5.1 the pattern allows numbers
-    without "+"; the native request of even-numbered intents has none (07b A10), the gold keeps "+"
+    without "+"; the native request of intents numbered 1 or 2 mod 4 has none (08a D11), the gold keeps "+"
   - [restructured+renamed] connectivityStatus/reachabilityStatus -> reachable+connectivity[] (L1-C3,C4)
 
 Gold device (07b A1, A2): only what the client can know, see render/ids.py.
@@ -67,7 +67,7 @@ def render_answer(world_outcome: dict | None, version: str) -> dict[str, Any]:
 
     v0.5.1 response: {connectivityStatus: "CONNECTED_DATA"|"CONNECTED_SMS"|"NOT_CONNECTED"}
       Catalogue L1-C3 (restructured+renamed): rule is:
-        - connectivity includes DATA -> CONNECTED_DATA
+        - connectivity includes DATA -> CONNECTED_DATA (with SMS as well: CONNECTED_SMS is an accepted alternative, 08a C10)
         - connectivity includes SMS only -> CONNECTED_SMS
         - not reachable -> NOT_CONNECTED
     v0.6.0 response: {reachabilityStatus: same three values, lastStatusTime}
@@ -90,12 +90,20 @@ def render_answer(world_outcome: dict | None, version: str) -> dict[str, Any]:
             cs = "CONNECTED_DATA"
         else:
             cs = "CONNECTED_SMS"
-        if version == "v0.5.1":
-            return {"status": "done", "result": {"connectivityStatus": cs}}
-        result: dict = {"reachabilityStatus": cs}
-        if last_status_time:
-            result["lastStatusTime"] = last_status_time
-        return {"status": "done", "result": result}
+        # 08a C10: a DATA+SMS device is both CONNECTED_DATA and CONNECTED_SMS; the specification defines no
+        # precedence, so either is accepted.
+        both = bool(reachable and connectivity and "DATA" in connectivity and "SMS" in connectivity)
+
+        def _answer(value: str) -> dict:
+            res: dict = {"connectivityStatus": value} if version == "v0.5.1" else {"reachabilityStatus": value}
+            if version == "v0.6.0" and last_status_time:
+                res["lastStatusTime"] = last_status_time
+            return res
+
+        answer: dict = {"status": "done", "result": _answer(cs)}
+        if both:
+            answer["alternatives"] = [_answer("CONNECTED_SMS")]
+        return answer
 
     if version == "v1.0.0":
         result = {"reachable": reachable}

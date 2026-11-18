@@ -15,7 +15,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "path": "/device-status/v0/connectivity",
   "body": {
     "device": {
-      "phoneNumber": "+9901000001"
+      "phoneNumber": "9901000001"
     }
   }
 }
@@ -38,11 +38,11 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
 
 | client_version | status | result summary | tags request | tags response | breaking crossed |
 |---|---|---|---|---|---|
-| `v0.5.1` | `done` | `connectivityStatus`: "CONNECTED_DATA" | renamed | renamed,restructured | 3 |
+| `v0.5.1` | `done` | `connectivityStatus`: "CONNECTED_DATA" | renamed,unit_format | renamed,restructured | 4 |
 | `v0.6.0` | `done` | `reachabilityStatus`: "CONNECTED_DATA", `lastStatusTime`: "2026-12-01T11:59:50Z" |  | restructured | 2 |
 | `v1.0.0` | `done` | `reachable`: true, `connectivity`: ["DATA", "SMS"] |  |  | 0 |
 
-**change_tags (oldest):** request=['renamed'], response=['renamed', 'restructured']
+**change_tags (oldest):** request=['renamed', 'unit_format'], response=['renamed', 'restructured']
 
 ---
 ### L1-m02
@@ -147,7 +147,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "path": "/device-status/v0/connectivity",
   "body": {
     "device": {
-      "phoneNumber": "9901000004"
+      "phoneNumber": "+9901000004"
     }
   }
 }
@@ -170,11 +170,11 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
 
 | client_version | status | result summary | tags request | tags response | breaking crossed |
 |---|---|---|---|---|---|
-| `v0.5.1` | `done` | `connectivityStatus`: "CONNECTED_DATA" | renamed,unit_format | renamed,restructured | 4 |
+| `v0.5.1` | `done` | `connectivityStatus`: "CONNECTED_DATA" | renamed | renamed,restructured | 3 |
 | `v0.6.0` | `done` | `reachabilityStatus`: "CONNECTED_DATA", `lastStatusTime`: "2026-12-01T11:30:00Z" |  | restructured | 2 |
 | `v1.0.0` | `done` | `reachable`: true, `connectivity`: ["DATA", "SMS"] |  |  | 0 |
 
-**change_tags (oldest):** request=['renamed', 'unit_format'], response=['renamed', 'restructured']
+**change_tags (oldest):** request=['renamed'], response=['renamed', 'restructured']
 
 ---
 ### L1-m05
@@ -543,7 +543,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "path": "/device-status/v0/connectivity",
   "body": {
     "device": {
-      "phoneNumber": "+9901000013"
+      "phoneNumber": "9901000013"
     }
   }
 }
@@ -566,11 +566,11 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
 
 | client_version | status | result summary | tags request | tags response | breaking crossed |
 |---|---|---|---|---|---|
-| `v0.5.1` | `done` | `connectivityStatus`: "CONNECTED_SMS" | renamed | renamed,restructured | 3 |
+| `v0.5.1` | `done` | `connectivityStatus`: "CONNECTED_SMS" | renamed,unit_format | renamed,restructured | 4 |
 | `v0.6.0` | `done` | `reachabilityStatus`: "CONNECTED_SMS", `lastStatusTime`: "2026-12-01T11:55:00Z" |  | restructured | 2 |
 | `v1.0.0` | `done` | `reachable`: true, `connectivity`: ["SMS"] |  |  | 0 |
 
-**change_tags (oldest):** request=['renamed'], response=['renamed', 'restructured']
+**change_tags (oldest):** request=['renamed', 'unit_format'], response=['renamed', 'restructured']
 
 ---
 ### L1-m14
@@ -675,7 +675,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "path": "/device-status/v0/connectivity",
   "body": {
     "device": {
-      "phoneNumber": "9901000016"
+      "phoneNumber": "+9901000016"
     }
   }
 }
@@ -698,11 +698,11 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
 
 | client_version | status | result summary | tags request | tags response | breaking crossed |
 |---|---|---|---|---|---|
-| `v0.5.1` | `done` | `connectivityStatus`: "CONNECTED_DATA" | renamed,unit_format | renamed,restructured | 4 |
+| `v0.5.1` | `done` | `connectivityStatus`: "CONNECTED_DATA" | renamed | renamed,restructured | 3 |
 | `v0.6.0` | `done` | `reachabilityStatus`: "CONNECTED_DATA", `lastStatusTime`: "2026-12-01T11:59:50Z" |  | restructured | 2 |
 | `v1.0.0` | `done` | `reachable`: true, `connectivity`: ["DATA", "SMS"] |  |  | 0 |
 
-**change_tags (oldest):** request=['renamed', 'unit_format'], response=['renamed', 'restructured']
+**change_tags (oldest):** request=['renamed'], response=['renamed', 'restructured']
 
 ---
 ### L1-m17
@@ -1248,7 +1248,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "path": "/device-status/v0/connectivity",
   "body": {
     "device": {
-      "phoneNumber": "+9901000029"
+      "phoneNumber": "9901000029"
     }
   }
 }
@@ -1271,11 +1271,11 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
 
 | client_version | status | result summary | tags request | tags response | breaking crossed |
 |---|---|---|---|---|---|
-| `v0.5.1` | `done` | `connectivityStatus`: "CONNECTED_DATA" | renamed | renamed,restructured | 3 |
+| `v0.5.1` | `done` | `connectivityStatus`: "CONNECTED_DATA" | renamed,unit_format | renamed,restructured | 4 |
 | `v0.6.0` | `done` | `reachabilityStatus`: "CONNECTED_DATA", `lastStatusTime`: "2026-12-01T11:30:00Z" |  | restructured | 2 |
 | `v1.0.0` | `done` | `reachable`: true, `connectivity`: ["DATA", "SMS"] |  |  | 0 |
 
-**change_tags (oldest):** request=['renamed'], response=['renamed', 'restructured']
+**change_tags (oldest):** request=['renamed', 'unit_format'], response=['renamed', 'restructured']
 
 ---
 ### L1-m30
@@ -1336,7 +1336,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "path": "/location/v0/verify",
   "body": {
     "ueId": {
-      "msisdn": "+9901000001"
+      "msisdn": "9901000001"
     },
     "latitude": 52.52,
     "longitude": 13.411,
@@ -1505,7 +1505,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "path": "/location/v0/verify",
   "body": {
     "ueId": {
-      "msisdn": "9901000004"
+      "msisdn": "+9901000004"
     },
     "latitude": 48.86,
     "longitude": 2.352,
@@ -2014,7 +2014,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "path": "/location/v0/verify",
   "body": {
     "ueId": {
-      "msisdn": "+9901000013"
+      "msisdn": "9901000013"
     },
     "latitude": 50.731,
     "longitude": 7.112,
@@ -2183,7 +2183,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "path": "/location/v0/verify",
   "body": {
     "ueId": {
-      "msisdn": "9901000016"
+      "msisdn": "+9901000016"
     },
     "latitude": 48.208,
     "longitude": 16.379,
@@ -2923,7 +2923,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "path": "/location/v0/verify",
   "body": {
     "ueId": {
-      "msisdn": "+9901000029"
+      "msisdn": "9901000029"
     },
     "latitude": 48.212,
     "longitude": 16.373,
@@ -3042,7 +3042,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "body": {
     "duration": 3600,
     "ueId": {
-      "msisdn": "+9901000001"
+      "msisdn": "9901000001"
     },
     "asId": {
       "ipv4addr": "198.51.100.20"
@@ -3213,7 +3213,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "body": {
     "duration": 3600,
     "ueId": {
-      "msisdn": "9901000004"
+      "msisdn": "+9901000004"
     },
     "asId": {
       "ipv4addr": "198.51.100.30/32"
@@ -3763,7 +3763,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "body": {
     "duration": 3600,
     "ueId": {
-      "msisdn": "+9901000013"
+      "msisdn": "9901000013"
     },
     "asId": {
       "ipv6addr": "2001:db8:b::10"
@@ -4014,7 +4014,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "body": {
     "duration": 5400,
     "ueId": {
-      "msisdn": "+9901000017"
+      "msisdn": "9901000017"
     },
     "asId": {
       "ipv4addr": "198.51.100.60"
@@ -4205,7 +4205,7 @@ Pilot intents are not included (they re-use a subset of main devices/sessions).
   "body": {
     "duration": 7200,
     "ueId": {
-      "msisdn": "9901000020"
+      "msisdn": "+9901000020"
     },
     "asId": {
       "ipv6addr": "2001:db8:b::10"

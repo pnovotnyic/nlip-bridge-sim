@@ -18,7 +18,7 @@ from nlipeval.scoring.compare import (
     matches_any_gold_call,
 )
 
-SCORER_VERSION = "1.1.0"
+SCORER_VERSION = "1.2.0"
 
 
 def _norm_field(f: str) -> str:
@@ -176,7 +176,7 @@ def score_session(
             break
 
     # 3. Response understanding
-    status_correct, response_correct, response_mismatches = compare_response_understanding(
+    status_correct, response_correct, response_mismatches, response_incomplete = compare_response_understanding(
         client_final, task
     )
 
@@ -222,6 +222,7 @@ def score_session(
         "request_mismatches": request_mismatches,
         "response_correct": response_correct,
         "response_mismatches": response_mismatches,
+        "response_incomplete": response_incomplete,
         "status_correct": status_correct,
         "end_to_end": end_to_end,
         "harmful": harmful,

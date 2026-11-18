@@ -8,15 +8,15 @@ NLIP state machine (interaction allowed):
   2. server: ask | restate | decline  (execute → treated as restate + slip logged)
   3. client: answer (back to 2+1i) | correct (back to 2+1i) | confirm (→ 4) | abort (→ declined)
   4. harness executes the plan
-  5. server report (or server restate after backend rejection → back to 3+1i)
+  5. server report (or, once, after the first execution: server restate after a backend rejection → back to 3+1i)
   6. client final
   Limits: ≤5 interactions, ≤30 model calls total, wall-time limit.
 
 NLIP-0 state machine (no interaction):
   1. client request
   2. server execute | decline  (ask/restate → slip; take plan or decline)
-  3. harness executes; on rejection the server may retry once (n_server_retries += 1)
-  4. server report
+  3. harness executes; on rejection the server may retry once (n_server_retries += 1; a restate is a slip)
+  4. server report (or the server's report of the rejection, if it does not retry)
   5. client final
 """
 
@@ -34,6 +34,7 @@ import httpx
 import uvicorn
 
 from nlipeval.agents.client import ClientAgent, ClientTurn
+from nlipeval.agents.repair import turn_with_action_check
 from nlipeval.agents.server import ServerAgent, ServerTurn, make_server_app
 from nlipeval.nlip.message import Message
 from nlipeval.nlip.transport import NLIPClient
@@ -42,6 +43,18 @@ from nlipeval.nlip.validate import validate
 START_MESSAGE = "Begin the session."
 MAX_INTERACTIONS = 5
 MAX_MODEL_CALLS = 30
+
+# B6: the actions allowed in each state. A disallowed action is repaired once; `tolerated` actions are
+# not repaired, the state machine handles them as protocol slips.
+CLIENT_FIRST = ("request",)
+CLIENT_AFTER_ASK = ("answer", "abort")
+CLIENT_AFTER_RESTATE = ("confirm", "correct", "abort")
+CLIENT_FINAL = ("final",)
+NLIP_SERVER_PLAN = ("ask", "restate", "decline")
+NLIP_SERVER_PLAN_TOLERATED = ("execute",)
+NLIP0_SERVER_PLAN = ("execute", "decline")
+NLIP0_SERVER_PLAN_TOLERATED = ("ask", "restate")
+ABORT_NOTICE = "The session has ended because you aborted it. Reply with action \"final\" and your final result."
 
 
 def _utc_now() -> str:
@@ -83,6 +96,8 @@ class SessionOutcome:
     n_restatements: int = 0
     n_server_retries: int = 0
     n_protocol_slips: int = 0
+    n_action_repairs_client: int = 0
+    n_action_repairs_server: int = 0
     plans: list[PlanRecord] = field(default_factory=list)
     executed_calls: list[ExecutedCall] = field(default_factory=list)
     client_final: dict | None = None
@@ -294,6 +309,8 @@ def run_session(task: dict, cfg: SessionConfig) -> SessionOutcome:
         srv.stop()
         out.calls_client = cfg.client_agent.call_count
         out.calls_server = cfg.server_agent.call_count
+        out.n_action_repairs_client = cfg.client_agent.n_action_repairs
+        out.n_action_repairs_server = cfg.server_agent.n_action_repairs
         out.ended_utc = _utc_now()
         out.wall_seconds = time.monotonic() - t_start
         # Convert nlip_client.wire to data contract format (body → message)
@@ -335,12 +352,12 @@ class _HarnessError(Exception):
 def _fail(res: Any, what: str) -> None:
     """Raise the right session error for a failed model call.
 
-    error_model: the reply did not parse after repair, or the model refused (or gave no turn).
+    error_model: the reply did not parse, or used a disallowed action, after repair, or the model refused (or gave no turn).
     error_harness: infrastructure failures (429, 5xx, connection errors, per-call timeouts, bad credentials).
     """
     et = getattr(res, "error_type", None) if res is not None else None
     err = getattr(res, "error", None) if res is not None else None
-    if et not in (None, "parse_failure", "refusal"):
+    if et not in (None, "parse_failure", "refusal", "action_failure"):
         raise _HarnessError(f"{what}: {err}")
     raise _ModelError(f"{what}: {err}")
 
@@ -377,6 +394,31 @@ def _nlip_send(
     return " ".join(texts).strip() if texts else (resp.content or "")
 
 
+def _client_turn(cfg: SessionConfig, history: list[dict], purpose: str, allowed: tuple[str, ...]):
+    """One client turn, with one repair if the action is not allowed in this state (B6)."""
+    return turn_with_action_check(cfg.client_agent, history, purpose, allowed)
+
+
+def _client_final(cfg: SessionConfig, out: SessionOutcome, history: list[dict]) -> None:
+    """Ask the client for its `final` and record it (B6, B7)."""
+    turn, res = _client_turn(cfg, history, "final", CLIENT_FINAL)
+    _add_tokens(out.tokens, res.usage, "client")
+    if turn is None or res.error:
+        _fail(res, "client error on final")
+    if turn.final:
+        out.client_final = turn.final
+    else:
+        _note_missing_final(out, turn)
+
+
+def _client_aborted(cfg: SessionConfig, out: SessionOutcome, history: list[dict], abort_turn) -> None:
+    """The client aborted: it still gives its `final` (B7). The termination stays `declined`."""
+    history.append({"role": "assistant", "content": json.dumps(abort_turn.raw)})
+    history.append({"role": "user", "content": ABORT_NOTICE})
+    _client_final(cfg, out, history)
+    out.termination = "declined"
+
+
 # --------------------------------------------------------------------------- NLIP state machine
 
 def _run_nlip(
@@ -391,10 +433,12 @@ def _run_nlip(
     api = task["api"]
     client_history: list[dict] = [{"role": "user", "content": START_MESSAGE}]
     total_calls = 0
+    cfg.server_agent.plan_allowed = NLIP_SERVER_PLAN
+    cfg.server_agent.plan_tolerated = NLIP_SERVER_PLAN_TOLERATED
 
     # --- step 1: client request ---
     _check_limits_simple(t_start, cfg.wall_time_limit_s)
-    client_turn, cr = cfg.client_agent.turn(client_history, purpose="compose")
+    client_turn, cr = _client_turn(cfg, client_history, "compose", CLIENT_FIRST)
     total_calls += 1
     _add_tokens(out.tokens, cr.usage, "client")
     if client_turn is None or cr.error:
@@ -425,8 +469,10 @@ def _run_nlip(
         _check_limits_simple(t_start, cfg.wall_time_limit_s)
 
         # --- protocol-slip: server sent execute before confirmation ---
+        # Every server turn seen here answers a client message (or reports a rejection), so an `execute`
+        # always comes before a confirmation, also after a correction that follows a rejection (08a H6).
         effective_action = server_turn.action
-        if effective_action == "execute" and not first_plan_done:
+        if effective_action == "execute":
             out.errors.append(f"protocol_slip: server sent execute before client confirmation (turn {total_calls})")
             out.n_protocol_slips += 1
             effective_action = "restate"
@@ -435,11 +481,7 @@ def _run_nlip(
             # server declined; client should still produce a final
             out.plans.append(PlanRecord(turn=total_calls, action="decline", plan=None, asked_fields=None))
             # give client the reply to produce final
-            client_turn2, cr2 = cfg.client_agent.turn(client_history, purpose="final")
-            total_calls += 1
-            _add_tokens(out.tokens, cr2.usage, "client")
-            if client_turn2 and client_turn2.action == "final":
-                out.client_final = client_turn2.final
+            _client_final(cfg, out, client_history)
             out.termination = "declined"
             return
 
@@ -454,14 +496,14 @@ def _run_nlip(
                 out.termination = "max_interactions"
                 return
             # client answers
-            client_turn2, cr2 = cfg.client_agent.turn(client_history, purpose="compose")
+            client_turn2, cr2 = _client_turn(cfg, client_history, "compose", CLIENT_AFTER_ASK)
             total_calls += 1
             _add_tokens(out.tokens, cr2.usage, "client")
             if client_turn2 is None or cr2.error:
                 _fail(cr2, "client error on answer")
             ask_rec.client_reply = client_turn2.action
             if client_turn2.action == "abort":
-                out.termination = "declined"
+                _client_aborted(cfg, out, client_history, client_turn2)
                 return
             # send client answer to server
             server_reply_text = _nlip_send(nlip_client, client_turn2.message)
@@ -492,14 +534,14 @@ def _run_nlip(
                                   plan=server_turn.plan, asked_fields=None)
             out.plans.append(plan_rec)
             # client replies with confirm or correct
-            client_turn2, cr2 = cfg.client_agent.turn(client_history, purpose="compose")
+            client_turn2, cr2 = _client_turn(cfg, client_history, "compose", CLIENT_AFTER_RESTATE)
             total_calls += 1
             _add_tokens(out.tokens, cr2.usage, "client")
             if client_turn2 is None or cr2.error:
                 _fail(cr2, "client error on restate reply")
             plan_rec.client_reply = client_turn2.action
             if client_turn2.action == "abort":
-                out.termination = "declined"
+                _client_aborted(cfg, out, client_history, client_turn2)
                 return
             if client_turn2.action == "correct":
                 out.n_corrections += 1
@@ -524,9 +566,8 @@ def _run_nlip(
                     return
                 continue
 
-            # client confirmed the plan
-            if client_turn2.action not in ("confirm", "answer"):   # answer is accepted as a confirmation
-                raise _ModelError(f"client replied {client_turn2.action!r} to a restatement; expected confirm, correct or abort")
+            # client confirmed the plan; its confirm stays in its own history (08a H5)
+            client_history.append({"role": "assistant", "content": json.dumps(client_turn2.raw)})
             first_plan_done = True
 
             # --- step 4: execute ---
@@ -540,48 +581,23 @@ def _run_nlip(
             out.executed_calls.append(ec)
 
             # --- step 5: server report ---
-            # Give server the backend outcome directly (not via NLIP wire).
-            server_turn, sr = _tell_server_backend(cfg.server_agent, ec, t_start, cfg.wall_time_limit_s)
+            # Give server the backend outcome directly (not via NLIP wire). After the first execution a
+            # rejected call may be restated once; after a later execution only a report is allowed.
+            first_execution = len(out.executed_calls) == 1
+            allowed = ("report", "restate") if ec.status >= 400 and first_execution else ("report",)
+            server_turn, sr = _tell_server_backend(cfg.server_agent, ec, t_start, cfg.wall_time_limit_s,
+                                                   allowed)
             total_calls += 1
             _add_tokens(out.tokens, sr.usage if sr else None, "server")
             if server_turn is None or (sr and sr.error):
                 _fail(sr, "server error on report")
 
-            # if server restates again (backend rejection), allow one more restate
+            # the server restates after a backend rejection: back to the client, through the restate
+            # branch above, so that a confirm, a correction or an abort is handled as for any restatement
+            # (08a H6: a correction here used to be ignored and the old plan executed)
             if server_turn.action == "restate":
-                out.n_restatements += 1
-                out.n_interactions += 1
-                if out.n_interactions >= MAX_INTERACTIONS:
-                    out.termination = "max_interactions"
-                    return
-                plan_rec2 = PlanRecord(turn=total_calls, action="restate",
-                                       plan=server_turn.plan, asked_fields=None)
-                out.plans.append(plan_rec2)
-                # client must confirm again
                 client_history.append({"role": "user", "content": server_turn.message})
-                client_turn3, cr3 = cfg.client_agent.turn(client_history, purpose="compose")
-                total_calls += 1
-                _add_tokens(out.tokens, cr3.usage, "client")
-                if client_turn3 is not None:
-                    plan_rec2.client_reply = client_turn3.action
-                if client_turn3 is None or cr3.error or client_turn3.action not in ("confirm", "correct", "answer"):
-                    _fail(cr3, "client error after re-restate")
-                if client_turn3.action == "correct":
-                    out.n_corrections += 1
-                # re-execute
-                plan2 = server_turn.plan
-                if not plan2:
-                    raise _HarnessError("Server re-restate has no plan")
-                try:
-                    ec2 = _call_backend(plan2, cfg.backend_urls, api, session_id)
-                except Exception as e:
-                    raise _HarnessError(f"re-execute backend call failed: {e}") from e
-                out.executed_calls.append(ec2)
-                server_turn, sr = _tell_server_backend(cfg.server_agent, ec2, t_start, cfg.wall_time_limit_s)
-                total_calls += 1
-                _add_tokens(out.tokens, sr.usage if sr else None, "server")
-                if server_turn is None or (sr and sr.error):
-                    _fail(sr, "server error on re-report")
+                continue
 
             # server should now be reporting
             # relay the report text to the client
@@ -589,15 +605,7 @@ def _run_nlip(
             client_history.append({"role": "user", "content": server_report_text})
 
             # --- step 6: client final ---
-            client_turn_final, cr_final = cfg.client_agent.turn(client_history, purpose="final")
-            total_calls += 1
-            _add_tokens(out.tokens, cr_final.usage, "client")
-            if client_turn_final is None or cr_final.error:
-                _fail(cr_final, "client error on final")
-            if client_turn_final.final:
-                out.client_final = client_turn_final.final
-            else:
-                _note_missing_final(out, client_turn_final)
+            _client_final(cfg, out, client_history)
             out.termination = "final"
             return
 
@@ -610,6 +618,8 @@ def _tell_server_backend(
     ec: ExecutedCall,
     t_start: float,
     wall_limit: float,
+    allowed: tuple[str, ...] | None = None,
+    tolerated: tuple[str, ...] = (),
 ) -> tuple["ServerTurn | None", Any]:
     """Tell the server agent the backend execution result directly (not via NLIP wire).
 
@@ -626,7 +636,7 @@ def _tell_server_backend(
     if history is None:
         history = []
     history.append({"role": "user", "content": backend_msg})
-    turn, res = agent.turn(list(history), purpose="report")
+    turn, res = turn_with_action_check(agent, list(history), "report", allowed, tolerated)
     if turn is not None:
         history.append({"role": "assistant", "content": json.dumps(turn.raw)})
     return turn, res
@@ -650,10 +660,12 @@ def _run_nlip0(
 ) -> None:
     api = task["api"]
     client_history: list[dict] = [{"role": "user", "content": START_MESSAGE}]
+    cfg.server_agent.plan_allowed = NLIP0_SERVER_PLAN
+    cfg.server_agent.plan_tolerated = NLIP0_SERVER_PLAN_TOLERATED
 
     # --- step 1: client request ---
     _check_limits_simple(t_start, cfg.wall_time_limit_s)
-    client_turn, cr = cfg.client_agent.turn(client_history, purpose="compose")
+    client_turn, cr = _client_turn(cfg, client_history, "compose", CLIENT_FIRST)
     _add_tokens(out.tokens, cr.usage, "client")
     if client_turn is None or cr.error:
         _fail(cr, "client error on request")
@@ -685,10 +697,7 @@ def _run_nlip0(
     if effective_action == "decline":
         out.plans.append(PlanRecord(turn=1, action="decline", plan=None, asked_fields=None))
         client_history.append({"role": "user", "content": server_reply_text})
-        client_turn2, cr2 = cfg.client_agent.turn(client_history, purpose="final")
-        _add_tokens(out.tokens, cr2.usage, "client")
-        if client_turn2 and client_turn2.action == "final":
-            out.client_final = client_turn2.final
+        _client_final(cfg, out, client_history)
         out.termination = "declined"
         return
 
@@ -704,35 +713,41 @@ def _run_nlip0(
     out.executed_calls.append(ec)
 
     # server retry on backend rejection (once, without client)
+    server_turn_report = sr_report = None
     if ec.status >= 400:
-        server_turn2, sr2 = _tell_server_backend(cfg.server_agent, ec, t_start, cfg.wall_time_limit_s)
-        if server_turn2 is not None:
-            _add_tokens(out.tokens, sr2.usage if sr2 else None, "server")
-            if server_turn2.plan and server_turn2.action in ("execute", "restate"):
-                out.n_server_retries += 1
-                try:
-                    ec2 = _call_backend(server_turn2.plan, cfg.backend_urls, api, session_id)
-                except Exception as e:
-                    raise _HarnessError(f"server retry backend call failed: {e}") from e
-                out.executed_calls.append(ec2)
-                ec = ec2  # use the retried result for the report
+        server_turn2, sr2 = _tell_server_backend(cfg.server_agent, ec, t_start, cfg.wall_time_limit_s,
+                                                 ("report", "execute"), ("restate",))
+        _add_tokens(out.tokens, sr2.usage if sr2 else None, "server")
+        if server_turn2 is None or (sr2 and sr2.error):
+            _fail(sr2, "server error after backend rejection")
+        if server_turn2.action == "report":
+            # 08a H4: the server reported the rejection at once; that is its report
+            server_turn_report, sr_report = server_turn2, sr2
+        elif server_turn2.plan:
+            if server_turn2.action == "restate":
+                # 08a H4: a restatement is a protocol slip in NLIP-0, as on the first turn; its plan is retried
+                out.errors.append("protocol_slip: server sent 'restate' in NLIP-0 (retry)")
+                out.n_protocol_slips += 1
+            out.n_server_retries += 1
+            try:
+                ec2 = _call_backend(server_turn2.plan, cfg.backend_urls, api, session_id)
+            except Exception as e:
+                raise _HarnessError(f"server retry backend call failed: {e}") from e
+            out.executed_calls.append(ec2)
+            ec = ec2  # use the retried result for the report
 
     # --- step 4: server report ---
-    server_turn_report, sr_report = _tell_server_backend(cfg.server_agent, ec, t_start, cfg.wall_time_limit_s)
     if server_turn_report is None:
-        raise _HarnessError("Server produced no structured turn for report")
-    _add_tokens(out.tokens, sr_report.usage if sr_report else None, "server")
+        server_turn_report, sr_report = _tell_server_backend(cfg.server_agent, ec, t_start,
+                                                             cfg.wall_time_limit_s, ("report",))
+        _add_tokens(out.tokens, sr_report.usage if sr_report else None, "server")
+        if server_turn_report is None or (sr_report and sr_report.error):
+            # 08a H3: no parse or no allowed action after repair is a model failure, as under NLIP
+            _fail(sr_report, "server error on report")
 
-    report_text = server_turn_report.message if server_turn_report else "Done."
+    report_text = server_turn_report.message
     client_history.append({"role": "user", "content": report_text})
 
     # --- step 5: client final ---
-    client_turn_final, cr_final = cfg.client_agent.turn(client_history, purpose="final")
-    _add_tokens(out.tokens, cr_final.usage, "client")
-    if client_turn_final is None or cr_final.error:
-        _fail(cr_final, "client error on final")
-    if client_turn_final.final:
-        out.client_final = client_turn_final.final
-    else:
-        _note_missing_final(out, client_turn_final)
+    _client_final(cfg, out, client_history)
     out.termination = "final"

@@ -482,44 +482,85 @@ def check_harmful_call(
 
 # --------------------------------------------------------------------------- response understanding comparison
 
+# Fields a client may echo from its own request (08a C9). They are not in the answer schemas; if a model
+# returns one, it is accepted when it equals the value in the native request, and wrong otherwise.
+ECHO_FIELDS = ("device", "ueId")
+
+
+def _compare_result(
+    client_result: Any,
+    alt: Any,
+    required: list[str],
+    native_body: Any,
+    time_tolerance_s: float,
+) -> tuple[bool, str | None, bool]:
+    """Compare a client's result with one gold alternative (08a C9).
+
+    Required fields (of the client's answer schema) must be present and correct. An optional field must be
+    correct if present; if absent the result is still correct, and `incomplete` is True. An echo field is
+    accepted when it equals the native request's value. Returns (ok, mismatch, incomplete).
+    """
+    if not (isinstance(client_result, dict) and isinstance(alt, dict)):
+        ok, err = compare_values(client_result, alt, "result", time_tolerance_s)
+        return ok, err, False
+    act, gold = _strip_nulls(client_result), _strip_nulls(alt)
+    incomplete = False
+    for k, g in gold.items():
+        if k not in act:
+            if k in required:
+                return False, f"missing field result.{k} (expected {g!r})", False
+            incomplete = True
+            continue
+        ok, err = compare_values(act[k], g, f"result.{k}", time_tolerance_s)
+        if not ok:
+            return False, err, False
+    for k, v in act.items():
+        if k in gold:
+            continue
+        if k in ECHO_FIELDS and isinstance(native_body, dict) and k in native_body:
+            ok, err = compare_values(v, _strip_nulls(native_body[k]), f"result.{k}", time_tolerance_s)
+            if ok:
+                continue
+            return False, f"echo field {err}", False
+        return False, f"unexpected field result.{k} ({v!r})", False
+    return True, None, incomplete
+
+
 def compare_response_understanding(
     client_final: dict | None,
     task: dict,
     time_tolerance_s: float = DEFAULT_TIME_TOLERANCE_S,
-) -> tuple[bool, bool, list[str]]:
-    """Compare client_final with gold_client_answer (stage 07 §1.3).
+) -> tuple[bool, bool, list[str], bool]:
+    """Compare client_final with gold_client_answer (stage 07 §1.3, optional fields 08a C9).
 
-    Returns (status_correct: bool, response_correct: bool, mismatches: list[str]).
+    Returns (status_correct, response_correct, mismatches, response_incomplete).
     """
     if client_final is None:
-        return False, False, ["no client_final produced"]
+        return False, False, ["no client_final produced"], False
 
     gold_answer = task.get("gold_client_answer", {})
     gold_status = gold_answer.get("status")
     client_status = client_final.get("status")
 
     if client_status != gold_status:
-        return False, False, [f"status mismatch: got {client_status!r}, expected {gold_status!r}"]
-
-    status_correct = True
+        return False, False, [f"status mismatch: got {client_status!r}, expected {gold_status!r}"], False
 
     # If status is declined or unrepresentable, matching status is sufficient
     if gold_status in ("declined", "unrepresentable"):
-        return True, True, []
+        return True, True, [], False
 
-    # If status is done, compare result field by field
+    # If status is done, compare the result against the primary gold result and any alternatives
     gold_result = gold_answer.get("result")
     client_result = client_final.get("result")
+    required = list((task.get("client_answer_schema") or {}).get("required") or [])
+    native_body = (task.get("client_native_request") or {}).get("body")
 
-    # Check primary gold_result and any alternatives
-    alternatives = [gold_result] + gold_answer.get("alternatives", [])
     best_mismatches: list[str] = []
-
-    for alt in alternatives:
-        ok, err = compare_values(client_result, alt, "result", time_tolerance_s)
+    for alt in [gold_result] + gold_answer.get("alternatives", []):
+        ok, err, incomplete = _compare_result(client_result, alt, required, native_body, time_tolerance_s)
         if ok:
-            return True, True, []
+            return True, True, [], incomplete
         if err:
             best_mismatches.append(err)
 
-    return True, False, best_mismatches
+    return True, False, best_mismatches, False

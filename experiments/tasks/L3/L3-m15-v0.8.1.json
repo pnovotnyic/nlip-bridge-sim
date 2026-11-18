@@ -54,9 +54,6 @@
       "duration": {
         "type": "integer"
       },
-      "ueId": {
-        "type": "object"
-      },
       "asId": {
         "type": "object"
       },

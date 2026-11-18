@@ -469,11 +469,10 @@ def test_stage_04b_identifier_mismatches_and_fields(tmp_path, world):
 
 
 # --- real processes -------------------------------------------------------------------------------
-def test_launcher_http(tmp_path):
-    state = launcher.STATE_FILE
-    if state.exists() and any(launcher._alive(p["pid"]) for p in json.loads(state.read_text())["processes"].values()):
-        pytest.skip("backends are already running")
-    saved = state.read_bytes() if state.exists() else None
+def test_launcher_http(tmp_path, monkeypatch):
+    # 08a E12: use a state file of its own, so that a state file left by an earlier run or test (or running
+    # backends) can neither make the test skip or fail nor be touched by it.
+    monkeypatch.setattr(launcher, "STATE_FILE", tmp_path / "state.json")
     try:
         procs = launcher.up("127.0.0.1", 19400, tmp_path)
         l1, l2, l3 = (procs[a]["url"] for a in ("L1", "L2", "L3"))
@@ -493,8 +492,6 @@ def test_launcher_http(tmp_path):
         assert httpx.post(l2 + f"{L2}/verify", content=b"{bad", headers={"content-type": "application/json"}).status_code == 400
     finally:
         launcher.down()
-        if saved is not None:
-            state.write_bytes(saved)
     lines = [json.loads(x) for x in (tmp_path / "backend.jsonl").read_text().splitlines()]
     assert {r["api"] for r in lines} == {"L1", "L2", "L3"}
     assert not launcher.status()

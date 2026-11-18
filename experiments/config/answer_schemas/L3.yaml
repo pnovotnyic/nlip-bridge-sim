@@ -23,8 +23,6 @@ schemas:
           format: int64
         duration:
           type: integer
-        ueId:
-          type: object
         asId:
           type: object
         qos:
@@ -45,8 +43,6 @@ schemas:
           format: int64
         duration:
           type: integer
-        ueId:
-          type: object
         asId:
           type: object
         qos:
@@ -72,8 +68,6 @@ schemas:
           format: int64
         duration:
           type: integer
-        device:
-          type: object
         applicationServer:
           type: object
         qosProfile:
@@ -97,8 +91,6 @@ schemas:
           format: int64
         duration:
           type: integer
-        device:
-          type: object
         applicationServer:
           type: object
         qosProfile:
@@ -127,8 +119,6 @@ schemas:
           format: int64
         duration:
           type: integer
-        device:
-          type: object
         applicationServer:
           type: object
         qosProfile:
@@ -152,8 +142,6 @@ schemas:
           format: int64
         duration:
           type: integer
-        device:
-          type: object
         applicationServer:
           type: object
         qosProfile:
@@ -182,8 +170,6 @@ schemas:
           format: date-time
         duration:
           type: integer
-        device:
-          type: object
         applicationServer:
           type: object
         qosProfile:
@@ -209,8 +195,6 @@ schemas:
           format: date-time
         duration:
           type: integer
-        device:
-          type: object
         applicationServer:
           type: object
         qosProfile:
@@ -241,8 +225,6 @@ schemas:
           format: date-time
         duration:
           type: integer
-        device:
-          type: object
         applicationServer:
           type: object
         qosProfile:
@@ -268,8 +250,6 @@ schemas:
           format: date-time
         duration:
           type: integer
-        device:
-          type: object
         applicationServer:
           type: object
         qosProfile:
@@ -300,8 +280,6 @@ schemas:
           format: date-time
         duration:
           type: integer
-        device:
-          type: object
         applicationServer:
           type: object
         qosProfile:
@@ -327,8 +305,6 @@ schemas:
           format: date-time
         duration:
           type: integer
-        device:
-          type: object
         applicationServer:
           type: object
         qosProfile:

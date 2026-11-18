@@ -18,6 +18,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from nlipeval.agents.repair import turn_with_action_check
 from nlipeval.agents.schemas import SERVER_SCHEMA
 from nlipeval.models.adapter import ModelAdapter, Result
 from nlipeval.nlip.message import Message
@@ -61,6 +62,10 @@ class ServerAgent:
         self.system_prompt = system_prompt
         self.session_id = session_id
         self._call_count = 0
+        self.n_action_repairs = 0   # B6: repair messages sent for a disallowed action
+        # B6: actions allowed after a client message (set by the session); None = no check
+        self.plan_allowed: tuple[str, ...] | None = None
+        self.plan_tolerated: tuple[str, ...] = ()
         self.history: list[dict] | None = None   # set by the NLIP end-point on the first message
 
     def turn(
@@ -116,7 +121,8 @@ def make_server_app(
 
         history.append({"role": "user", "content": client_text})
 
-        turn, result = agent.turn(list(history), purpose="plan")
+        turn, result = turn_with_action_check(agent, list(history), "plan",
+                                              agent.plan_allowed, agent.plan_tolerated)
 
         if on_turn is not None:
             on_turn(turn, result, ctx.conversation_id)

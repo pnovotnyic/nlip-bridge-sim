@@ -7,7 +7,7 @@ render_answer(world_outcome, version)  -> {status, result}
 Change catalogue entries implemented:
   - [restructured+renamed] ueId -> device (v0.1.0 -> v0.2.0, L2-C1)
   - [unit_format+renamed]  ueId.msisdn -> device.phoneNumber (L2-C2); the msisdn pattern allows numbers without
-    "+", the native request of even-numbered intents has none (07b A10), the gold keeps "+"
+    "+", the native request of intents numbered 1 or 2 mod 4 has none (08a D11), the gold keeps "+"
   - [renamed]              ueId.externalId -> device.networkAccessIdentifier (L2-C3)
   - [restructured+newly_required] ueId.ipv4Addr (string) -> device.ipv4Address.publicAddress (L2-C4)
   - [restructured]         uePort -> device.ipv4Address.publicPort (L2-C5)

@@ -461,8 +461,8 @@ def test_nai_only_and_ipv4_gold_alternatives():
                 assert len(i["gold_calls"]) >= 2, i["task_id"]
 
 
-def test_phone_without_plus_in_even_numbered_intents():
-    """At L1 v0.5.1, L2 v0.1.0 and L3 v0.8.1 the phone numbers of even-numbered intents have no '+' (07b A10)."""
+def test_phone_without_plus_in_intents_1_or_2_mod_4():
+    """At L1 v0.5.1, L2 v0.1.0 and L3 v0.8.1 the phone numbers of intents numbered 1 or 2 mod 4 have no '+' (08a D11)."""
     for _, i in _all_instances():
         key = (i["api"], i["client_version"])
         if key not in {("L1", "v0.5.1"), ("L2", "v0.1.0"), ("L3", "v0.8.1")}:
@@ -472,7 +472,7 @@ def test_phone_without_plus_in_even_numbered_intents():
             continue
         n = int(i["intent_id"][1:])
         has_plus = '"+990100' in native
-        assert has_plus == (n % 2 == 1), i["task_id"]
+        assert has_plus == (n % 4 not in (1, 2)), i["task_id"]
         for call in i["gold_calls"]:
             if "phoneNumber" in json.dumps(call["body"]):
                 assert '"+990100' in json.dumps(call["body"]), i["task_id"]

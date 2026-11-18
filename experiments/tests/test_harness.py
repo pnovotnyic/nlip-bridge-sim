@@ -591,7 +591,7 @@ class TestMissingFinal:
     @staticmethod
     def _no_final(script):
         s = [dict(x) for x in script]
-        s[-1] = {"role": "client", "reply": {"action": "confirm", "message": "ok", "final": None}}
+        s[-1] = {"role": "client", "reply": {"action": "final", "message": "", "final": None}}
         return s
 
     def test_nlip_last_turn_without_final_is_a_slip(self, tmp_path, backend_200):
@@ -789,3 +789,335 @@ class TestPromptWording:
             assert render_client(t, "P2", "NLIP-0") and render_server(t["api"], t["server_version"], "P2", "NLIP-0")
             seen.add((t["api"], t["client_version"]))
         assert len(seen) == 14
+
+
+# ===========================================================================
+# 08a B6-B8: action repair, always end with the client's final
+# ===========================================================================
+
+def _c(action, message="ok", final=None):
+    return {"role": "client", "reply": {"action": action, "message": message, "final": final}}
+
+
+def _s(action, message="m", plan=None, asked=None):
+    return {"role": "server", "reply": {"action": action, "message": message, "plan": plan, "asked_fields": asked}}
+
+
+_PLAN = {"method": "POST", "path": "/device-reachability-status/v1/retrieve",
+         "body": {"device": {"phoneNumber": "+9901000001"}}}
+_FINAL_DONE = {"status": "done", "result": {"reachable": True}, "explanation": "ok"}
+_FINAL_DECLINED = {"status": "declined", "result": None, "explanation": "declined"}
+
+
+class TestActionRepair:
+    def test_repeated_request_is_repaired_then_confirmed(self, tmp_path, backend_200):
+        script = [_c("request", "Is +9901000001 reachable?"), _s("restate", "I plan this. Shall I go ahead?", _PLAN),
+                  _c("request", "Is +9901000001 reachable?"),          # disallowed after restate
+                  _c("confirm", "Yes"),                                  # repaired
+                  _s("report", "Reachable."), _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, backend_urls=backend_200)
+        assert out.termination == "final" and out.client_final == _FINAL_DONE
+        assert (out.n_action_repairs_client, out.n_action_repairs_server) == (1, 0)
+
+    def test_disallowed_action_twice_is_error_model(self, tmp_path, backend_200):
+        script = [_c("request"), _s("restate", "plan?", _PLAN), _c("request"), _c("request")]
+        out = _run(tmp_path, script, backend_urls=backend_200)
+        assert out.termination == "error_model"
+        assert out.n_action_repairs_client == 1
+
+    def test_server_report_before_execution_is_repaired(self, tmp_path, backend_200):
+        script = [_c("request"), _s("report", "Reachable."),            # not allowed after request
+                  _s("restate", "plan. Shall I go ahead?", _PLAN),
+                  _c("confirm"), _s("report", "Reachable."), _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, backend_urls=backend_200)
+        assert out.termination == "final"
+        assert (out.n_action_repairs_client, out.n_action_repairs_server) == (0, 1)
+
+    def test_server_disallowed_twice_is_error_model(self, tmp_path, backend_200):
+        out = _run(tmp_path, [_c("request"), _s("report", "x")], backend_urls=backend_200)
+        assert out.termination == "error_model" and out.n_action_repairs_server == 1
+
+    def test_server_ask_after_execution_is_repaired(self, tmp_path, backend_200):
+        script = [_c("request"), _s("restate", "plan?", _PLAN), _c("confirm"),
+                  _s("ask", "which phone?", asked=["device"]),            # not allowed after execution
+                  _s("report", "Reachable."), _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, backend_urls=backend_200)
+        assert out.termination == "final" and out.n_action_repairs_server == 1
+
+    def test_client_final_instead_of_answer_is_repaired(self, tmp_path, backend_200):
+        script = [_c("request"), _s("ask", "which phone?", asked=["device"]),
+                  _c("final", "", _FINAL_DONE), _c("answer", "+9901000001"),
+                  _s("restate", "plan?", _PLAN), _c("confirm"), _s("report", "Reachable."),
+                  _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, backend_urls=backend_200)
+        assert out.termination == "final" and out.n_action_repairs_client == 1
+
+    def test_client_non_final_after_report_is_repaired(self, tmp_path, backend_200):
+        script = [_c("request"), _s("restate", "plan?", _PLAN), _c("confirm"), _s("report", "Reachable."),
+                  _c("confirm"), _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, backend_urls=backend_200)
+        assert out.termination == "final" and out.client_final == _FINAL_DONE
+        assert out.n_action_repairs_client == 1
+
+    def test_nlip0_clean_session_has_no_repairs(self, tmp_path, backend_200):
+        out = _run(tmp_path, NLIP0_EXECUTE, condition="NLIP-0", backend_urls=backend_200)
+        assert (out.n_action_repairs_client, out.n_action_repairs_server) == (0, 0)
+
+    def test_nlip0_server_report_first_is_repaired(self, tmp_path, backend_200):
+        script = [_c("request"), _s("report", "x"), _s("execute", "go", _PLAN), _s("report", "Reachable."),
+                  _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, condition="NLIP-0", backend_urls=backend_200)
+        assert out.termination == "final" and out.n_action_repairs_server == 1
+
+    def test_nlip0_client_answer_first_is_repaired(self, tmp_path, backend_200):
+        script = [_c("answer"), _c("request"), _s("execute", "go", _PLAN), _s("report", "Reachable."),
+                  _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, condition="NLIP-0", backend_urls=backend_200)
+        assert out.termination == "final" and out.n_action_repairs_client == 1
+
+    def test_nlip0_slips_are_not_repaired(self, tmp_path, backend_200):
+        out = _run(tmp_path, NLIP0_PROTOCOL_SLIP_ASK, condition="NLIP-0", backend_urls=backend_200)
+        assert out.n_protocol_slips == 1 and out.n_action_repairs_server == 0
+
+    def test_nlip_execute_slip_is_not_repaired(self, tmp_path, backend_200):
+        out = _run(tmp_path, NLIP_PROTOCOL_SLIP_EXECUTE_BEFORE_CONFIRM, backend_urls=backend_200)
+        assert out.n_protocol_slips == 1 and out.n_action_repairs_server == 0
+
+    def test_repair_call_is_logged_with_purpose_repair(self, tmp_path, backend_200):
+        script = [_c("request"), _s("restate", "plan?", _PLAN), _c("request"), _c("confirm"),
+                  _s("report", "Reachable."), _c("final", "", _FINAL_DONE)]
+        _run(tmp_path, script, backend_urls=backend_200)
+        calls = [json.loads(l) for l in (tmp_path / "run" / "calls.jsonl").read_text().splitlines()]
+        assert [c["purpose"] for c in calls].count("repair") == 1
+
+
+class TestAlwaysEndsWithFinal:
+    def test_abort_is_followed_by_final_and_stays_declined(self, tmp_path):
+        out = _run(tmp_path, NLIP_ABORT)
+        assert out.termination == "declined" and out.client_final["status"] == "declined"
+
+    def test_abort_after_restate_is_followed_by_final(self, tmp_path):
+        script = [_c("request"), _s("restate", "plan?", _PLAN), _c("abort", "no"),
+                  _c("final", "", _FINAL_DECLINED)]
+        out = _run(tmp_path, script)
+        assert out.termination == "declined" and out.client_final == _FINAL_DECLINED
+
+    def test_abort_then_non_final_is_repaired(self, tmp_path):
+        script = [_c("request"), _s("ask", "which?", asked=["x"]), _c("abort", "no"),
+                  _c("abort", "no"), _c("final", "", _FINAL_DECLINED)]
+        out = _run(tmp_path, script)
+        assert out.termination == "declined" and out.client_final == _FINAL_DECLINED
+        assert out.n_action_repairs_client == 1
+
+    def test_server_decline_is_followed_by_final(self, tmp_path):
+        out = _run(tmp_path, NLIP_SERVER_DECLINE)
+        assert out.termination == "declined" and out.client_final["status"] == "declined"
+
+    def test_server_decline_without_final_object_is_not_silent(self, tmp_path):
+        script = [_c("request"), _s("decline", "no"), _c("confirm"), _c("confirm")]
+        out = _run(tmp_path, script)
+        assert out.termination == "error_model"
+
+    def test_nlip0_decline_is_followed_by_final(self, tmp_path):
+        out = _run(tmp_path, NLIP0_DECLINE, condition="NLIP-0")
+        assert out.termination == "declined" and out.client_final["status"] == "declined"
+
+
+class TestRepairCountersRecorded:
+    def test_session_record_carries_the_counters(self, tmp_path, monkeypatch):
+        import nlipeval.runner.run as runner
+        from nlipeval.runner.session import SessionOutcome
+
+        def fake_run_session(task, cfg):
+            return SessionOutcome(session_id="s", termination="final",
+                                  n_action_repairs_client=2, n_action_repairs_server=1)
+
+        monkeypatch.setattr("nlipeval.runner.session.run_session", fake_run_session)
+        adapter, _ = make_adapter(tmp_path, [{"role": "client", "reply": {}}])
+        rec, _w = runner._run_one(minimal_task(), "R3", "P2", "NLIP", 1, "r", adapter, {}, {"R3": {}}, 100.0)
+        assert rec["n_action_repairs_client"] == 2 and rec["n_action_repairs_server"] == 1
+
+
+# ===========================================================================
+# 08a H3-H6 (review of stage 08a): NLIP-0 report failures, the NLIP-0 report after a rejection,
+# the client's confirm in its own history, a correction after a backend rejection
+# ===========================================================================
+
+_REJECT = {"status": 400, "body": {"status": 400, "code": "INVALID_ARGUMENT", "message": "bad"}}
+_OK = {"status": 200, "body": {"reachable": True, "connectivity": ["DATA"]}}
+_PLAN2 = {"method": "POST", "path": "/device-reachability-status/v1/retrieve",
+          "body": {"device": {"phoneNumber": "+9901000002"}}}
+
+
+def _calls(tmp_path):
+    return [json.loads(l) for l in (tmp_path / "run" / "calls.jsonl").read_text().splitlines()]
+
+
+def _backend(responses):
+    srv, url = _make_mock_backend_server(responses)
+    return srv, {"L1": url, "L2": url, "L3": url}
+
+
+class TestNlip0Report:
+    def test_report_disallowed_twice_is_error_model(self, tmp_path, backend_200):
+        script = [_c("request"), _s("execute", "go", _PLAN), _s("ask", "x"), _s("ask", "y")]
+        out = _run(tmp_path, script, condition="NLIP-0", backend_urls=backend_200)
+        assert out.termination == "error_model" and out.n_action_repairs_server == 1
+
+    def test_report_repaired_once_is_final(self, tmp_path, backend_200):
+        script = [_c("request"), _s("execute", "go", _PLAN), _s("ask", "x"), _s("report", "Reachable."),
+                  _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, condition="NLIP-0", backend_urls=backend_200)
+        assert out.termination == "final" and out.n_action_repairs_server == 1
+
+    def test_report_of_a_rejection_is_used_at_once(self, tmp_path, backend_400_then_200):
+        script = [_c("request"), _s("execute", "go", _PLAN), _s("report", "Error 400 INVALID_ARGUMENT."),
+                  _c("final", "", _FINAL_DECLINED)]
+        out = _run(tmp_path, script, condition="NLIP-0", backend_urls=backend_400_then_200)
+        assert out.termination == "final" and out.client_final == _FINAL_DECLINED
+        assert out.n_server_retries == 0 and len(out.executed_calls) == 1
+        purposes = [c["purpose"] for c in _calls(tmp_path) if c["role"] == "server"]
+        assert purposes == ["plan", "report"]
+        final_call = [c for c in _calls(tmp_path) if c["purpose"] == "final"][-1]
+        assert final_call["messages"][-1]["content"] == "Error 400 INVALID_ARGUMENT."
+
+    def test_retry_then_report(self, tmp_path, backend_400_then_200):
+        script = [_c("request"), _s("execute", "go", _PLAN), _s("execute", "again", _PLAN2),
+                  _s("report", "Reachable."), _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, condition="NLIP-0", backend_urls=backend_400_then_200)
+        assert out.termination == "final" and out.n_server_retries == 1
+        assert [e.status for e in out.executed_calls] == [400, 200] and out.n_protocol_slips == 0
+
+    def test_restate_as_retry_is_a_slip(self, tmp_path, backend_400_then_200):
+        script = [_c("request"), _s("execute", "go", _PLAN), _s("restate", "again?", _PLAN2),
+                  _s("report", "Reachable."), _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, condition="NLIP-0", backend_urls=backend_400_then_200)
+        assert out.termination == "final" and out.n_server_retries == 1
+        assert out.n_protocol_slips == 1 and out.n_action_repairs_server == 0
+
+
+class TestClientConfirmInHistory:
+    def test_final_sees_its_confirm_before_the_report(self, tmp_path, backend_200):
+        script = [_c("request", "Is +9901000001 reachable?"), _s("restate", "plan. Shall I go ahead?", _PLAN),
+                  _c("confirm", "Yes, go ahead"), _s("report", "Reachable."), _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, backend_urls=backend_200)
+        assert out.termination == "final"
+        msgs = [c for c in _calls(tmp_path) if c["purpose"] == "final"][-1]["messages"]
+        assert [m["role"] for m in msgs] == ["user", "assistant", "user", "assistant", "user"]
+        assert json.loads(msgs[3]["content"])["action"] == "confirm"
+        assert msgs[4]["content"] == "Reachable."
+
+    def test_no_two_user_turns_in_a_row_after_a_rejection(self, tmp_path, backend_400_then_200):
+        out = _run(tmp_path, NLIP_BACKEND_REJECTION, backend_urls=backend_400_then_200)
+        assert out.termination == "final"
+        msgs = [c for c in _calls(tmp_path) if c["purpose"] == "final"][-1]["messages"]
+        roles = [m["role"] for m in msgs]
+        assert all(a != b for a, b in zip(roles, roles[1:])), roles
+        assert [json.loads(m["content"])["action"] for m in msgs if m["role"] == "assistant"] == \
+            ["request", "confirm", "confirm"]
+
+
+class TestCorrectionAfterRejection:
+    def test_correction_goes_to_the_server_and_its_new_plan_runs(self, tmp_path, backend_400_then_200):
+        script = [_c("request"), _s("restate", "plan A. Shall I go ahead?", _PLAN), _c("confirm"),
+                  _s("restate", "Rejected. Plan B. Shall I go ahead?", _PLAN),     # after the rejection
+                  _c("correct", "Use +9901000002 instead"),
+                  _s("restate", "Plan C with +9901000002. Shall I go ahead?", _PLAN2),
+                  _c("confirm"), _s("report", "Reachable."), _c("final", "", _FINAL_DONE)]
+        out = _run(tmp_path, script, backend_urls=backend_400_then_200)
+        assert out.termination == "final" and out.client_final == _FINAL_DONE
+        assert out.n_corrections == 1
+        assert [e.body for e in out.executed_calls] == [_PLAN["body"], _PLAN2["body"]]
+        server_plan_msgs = [c["messages"] for c in _calls(tmp_path) if c["role"] == "server" and c["purpose"] == "plan"]
+        assert server_plan_msgs[-1][-1]["content"] == "Use +9901000002 instead"
+
+    def test_abort_after_rejection_restate_ends_with_final(self, tmp_path, backend_400_then_200):
+        script = [_c("request"), _s("restate", "plan?", _PLAN), _c("confirm"),
+                  _s("restate", "Rejected. New plan?", _PLAN2), _c("abort", "no"),
+                  _c("final", "", _FINAL_DECLINED)]
+        out = _run(tmp_path, script, backend_urls=backend_400_then_200)
+        assert out.termination == "declined" and out.client_final == _FINAL_DECLINED
+        assert len(out.executed_calls) == 1
+
+    def test_restate_after_the_second_execution_is_repaired(self, tmp_path):
+        srv, urls = _backend([_REJECT, _REJECT])
+        try:
+            script = [_c("request"), _s("restate", "plan?", _PLAN), _c("confirm"),
+                      _s("restate", "Rejected. New plan?", _PLAN2), _c("confirm"),
+                      _s("restate", "Rejected again?", _PLAN),              # not allowed after a second execution
+                      _s("report", "Error 400 INVALID_ARGUMENT."), _c("final", "", _FINAL_DECLINED)]
+            out = _run(tmp_path, script, backend_urls=urls)
+        finally:
+            srv.shutdown()
+        assert out.termination == "final" and out.n_action_repairs_server == 1
+        assert len(out.executed_calls) == 2
+
+    def test_interactions_counted_as_before(self, tmp_path, backend_400_then_200):
+        out = _run(tmp_path, NLIP_BACKEND_REJECTION, backend_urls=backend_400_then_200)
+        assert (out.n_restatements, out.n_interactions, out.n_corrections) == (2, 1, 0)
+
+
+# ===========================================================================
+# 08a H1-H2 (review of stage 08a): provenance and run IDs
+# ===========================================================================
+
+def _matrix_keys(name):
+    import yaml
+    from nlipeval.runner.run import CONFIG_DIR, _load_part_tasks, _parts
+    m = yaml.safe_load((CONFIG_DIR / "runs" / name).read_text())
+    return m, {(t["task_id"], r, p, c) for part in _parts(m) for t in _load_part_tasks(part, False)
+               for r in part["rungs"] for p in part["prompts"] for c in part["conditions"]}
+
+
+class TestRunProvenance:
+    def test_pilot_slices_make_up_the_pilot(self):
+        m, full = _matrix_keys("pilot.yaml")
+        m1, r1 = _matrix_keys("pilot-r1.yaml")
+        m2, rits = _matrix_keys("pilot-rits.yaml")
+        assert r1 | rits == full and not r1 & rits
+        assert (len(r1), len(rits)) == (120, 300)
+        for x in (m, m1, m2):
+            assert not x.get("run_id") and not x.get("allow_round_b") and not x.get("allow_dirty")
+            assert x["stage"] == "stage8"
+
+    def test_run_id_uses_the_stage_and_the_override(self):
+        from nlipeval.runner.run import _make_run_id
+        rid = _make_run_id({"stage": "stage8", "label": "pilot-r1"})
+        assert rid.endswith("-stage8-pilot-r1") and len(rid.split("-")[0]) == 8
+        assert _make_run_id({"run_id": "fixed", "stage": "stage8"}) == "fixed"
+        assert _make_run_id({"run_id": "fixed"}, "given") == "given"
+
+    def test_dirty_inputs_stop_the_run(self, tmp_path, monkeypatch):
+        import nlipeval.runner.run as runner
+        monkeypatch.setattr(runner, "_git_dirty_paths", lambda: ["experiments/nlipeval/runner/session.py"])
+        mp = tmp_path / "m.yaml"
+        mp.write_text("label: x\nstage: stage8\nrungs: [R3]\n")
+        with pytest.raises(SystemExit, match="Uncommitted changes"):
+            runner.run(mp)
+        assert not (runner.DATA_DIR / runner._make_run_id({"stage": "stage8", "label": "x"})).exists()
+
+    def test_resume_needs_the_same_provenance(self, tmp_path):
+        from nlipeval.runner.run import PROVENANCE_KEYS, _check_resume
+        old = {"run_id": "r", "created_utc": "2026-11-18T00:00:00Z", **{k: "a" for k in PROVENANCE_KEYS}}
+        mp = tmp_path / "manifest.json"
+        mp.write_text(json.dumps(old))
+        same = {**old, "created_utc": "2026-11-19T00:00:00Z"}
+        _check_resume(mp, same, {})
+        assert same["created_utc"] == old["created_utc"] and len(same["resumed_utc"]) == 1
+        changed = {**old, "git_commit": "b"}
+        with pytest.raises(SystemExit, match="git_commit"):
+            _check_resume(mp, changed, {})
+        _check_resume(mp, {**old, "tasks_hash": "b"}, {"allow_dirty": True})   # a test run may resume
+
+    def test_new_run_has_no_resume_fields(self, tmp_path):
+        from nlipeval.runner.run import _check_resume
+        m = {"run_id": "r", "created_utc": "t"}
+        _check_resume(tmp_path / "manifest.json", m, {})
+        assert m == {"run_id": "r", "created_utc": "t"}
+
+    def test_dirty_paths_cover_only_inputs(self):
+        from nlipeval.runner.run import GIT_INPUT_PATHS, _git_dirty_paths
+        assert {"nlipeval", "prompts", "tasks", "config", "specs"} <= set(GIT_INPUT_PATHS)
+        paths = _git_dirty_paths()
+        assert paths is None or all(not p.startswith(("experiments/data/", "experiments/results/",
+                                                      "experiments/reports/")) for p in paths)

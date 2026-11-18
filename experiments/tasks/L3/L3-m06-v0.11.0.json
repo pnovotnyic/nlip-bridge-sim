@@ -53,9 +53,6 @@
       "duration": {
         "type": "integer"
       },
-      "device": {
-        "type": "object"
-      },
       "applicationServer": {
         "type": "object"
       },

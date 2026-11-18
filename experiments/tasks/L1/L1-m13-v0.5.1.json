@@ -10,7 +10,7 @@
   "versions_behind": 2,
   "breaking_crossed": 8,
   "breaking_crossed_ops": 3,
-  "catalogue_breaking_crossed": 3,
+  "catalogue_breaking_crossed": 4,
   "prompt_half": true,
   "pilot_round": null,
   "intent_text": "Check the reachability of phone number +9901000013.",
@@ -19,7 +19,7 @@
     "path": "/device-status/v0/connectivity",
     "body": {
       "device": {
-        "phoneNumber": "+9901000013"
+        "phoneNumber": "9901000013"
       }
     }
   },
@@ -76,7 +76,8 @@
   "missing_info": [],
   "missing_info_source": {},
   "change_tags_request": [
-    "renamed"
+    "renamed",
+    "unit_format"
   ],
   "change_tags_response": [
     "renamed",

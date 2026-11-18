@@ -19,7 +19,7 @@
     "path": "/location/v0/verify",
     "body": {
       "ueId": {
-        "msisdn": "9901000016"
+        "msisdn": "+9901000016"
       },
       "latitude": 48.208,
       "longitude": 16.379,

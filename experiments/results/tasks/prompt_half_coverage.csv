@@ -1,7 +1,7 @@
 api,kind,n_stage3_instances,n_prompt_half
 L1,renamed,30,15
 L1,restructured,60,30
-L1,unit_format,5,0
+L1,unit_format,6,3
 L1,newly_required,0,0
 L1,changed_meaning,0,0
 L1,removed,0,0

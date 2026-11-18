@@ -26,8 +26,9 @@ Gold devices (`render/ids.py`):
 | IPv4 + port | `ipv4Address{publicAddress, publicPort}` | one with `privateAddress` only where the native request has it (nowhere) |
 | NAI only | the fact's identifier (phone or IPv6), gold status `done` | the same plus the NAI |
 
-Phone numbers without "+": at L1 v0.5.1, L2 v0.1.0 and L3 v0.8.1 the patterns allow them, so the native request of even-numbered
-intents has no "+". The gold keeps "+". `unit_format` is tagged only where the rendered form differs (so never at L2 v0.2.0, L3 v0.9.0 and
+Phone numbers without "+": at L1 v0.5.1, L2 v0.1.0 and L3 v0.8.1 the patterns allow them, so the native request of intents whose number
+mod 4 is 1 or 2 has no "+" (08a D11; it replaces the even-number rule of 07b A10, which left no L1 `unit_format` instance in the
+prompt half). The gold keeps "+". `unit_format` is tagged only where the rendered form differs (so never at L2 v0.2.0, L3 v0.9.0 and
 v0.10.0, where all native numbers have "+").
 
 ## L1 Device Reachability Status
@@ -37,9 +38,9 @@ v0.10.0, where all native numbers have "+").
 | Entry | Direction | Version | Rule |
 |---|---|---|---|
 | `POST /connectivity` to `POST /retrieve` (renamed) | request | v0.5.1 | native path is the v0 path, the gold path is the v1 path |
-| `device.phoneNumber` pattern (unit_format) | request | v0.5.1 | even-numbered intents: no "+" in the native request |
-| `connectivityStatus` to `reachable`, `connectivity[]` | response | v0.5.1 | DATA present gives `CONNECTED_DATA`; SMS only gives `CONNECTED_SMS`; not reachable gives `NOT_CONNECTED` |
-| `reachabilityStatus` to `reachable`, `connectivity[]` | response | v0.6.0 | same rule, `lastStatusTime` kept |
+| `device.phoneNumber` pattern (unit_format) | request | v0.5.1 | intents numbered 1 or 2 mod 4: no "+" in the native request |
+| `connectivityStatus` to `reachable`, `connectivity[]` | response | v0.5.1 | DATA present gives `CONNECTED_DATA`; SMS only gives `CONNECTED_SMS`; not reachable gives `NOT_CONNECTED`. **DATA+SMS (08a C10):** the specification defines `CONNECTED_DATA` ("connected … for data usage") and `CONNECTED_SMS` ("… for SMS usage") and no precedence, so both are true: `CONNECTED_DATA` is the primary gold and `CONNECTED_SMS` is in `gold_client_answer.alternatives`. `NOT_CONNECTED` and `unrepresentable` stay wrong. 34 instances (24 main, 10 pilot) |
+| `reachabilityStatus` to `reachable`, `connectivity[]` | response | v0.6.0 | same rule (including the DATA+SMS alternative), `lastStatusTime` kept |
 | any error | response | all | `declined`: no result because the service refused. NAI-only intents are `done` through the fact's identifier |
 
 ## L2 Location Verification
@@ -48,7 +49,7 @@ v0.10.0, where all native numbers have "+").
 
 | Entry | Direction | Version | Rule |
 |---|---|---|---|
-| `ueId` to `device`, `msisdn`, `externalId`, `ipv4Addr`, `ipv6Addr` | request | v0.1.0 | renamed, restructured; `msisdn` without "+" for even-numbered intents |
+| `ueId` to `device`, `msisdn`, `externalId`, `ipv4Addr`, `ipv6Addr` | request | v0.1.0 | renamed, restructured; `msisdn` without "+" for intents numbered 1 or 2 mod 4 |
 | `uePort` to `device.ipv4Address.publicPort` | request | v0.1.0 | the port is its own field: nothing is missing |
 | `latitude`, `longitude` to `area.center.*` | request | v0.1.0 | moved |
 | `accuracy` (km) to `area.radius` (m) | request | v0.1.0 | `accuracy = radius / 1000`; the minimum is 2 km, so every radius is at least 2000 m; **never clamped**: the renderer raises an error |
@@ -82,3 +83,10 @@ L2 m30: fact "If a fresh reading is not possible, a reading up to one hour old i
 | gold profile | request | all | the native request has the intent's profile; the gold call differs only for m01/m11 (fact: use QOS_M for the full time) |
 
 Native requests never contain `gold_profile`. `missing_info` for m01 and m11 is `qosProfile` (source `fact`).
+
+## Scoring of optional answer fields (08a C9, scorer 1.2.0)
+
+- The fields in `required` of the client's answer schema must be present and correct.
+- An optional field must be correct if present. If it is absent the answer is still correct and `response_incomplete: true` goes into `scores.jsonl`.
+- A present but wrong optional value (for example an invented timestamp) makes the response wrong.
+- `device` and `ueId` are no longer in the answer schemas. If a model returns one anyway it is accepted when it equals the value in the native request, and wrong otherwise. Any other field outside the gold result is wrong.

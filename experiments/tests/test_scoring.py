@@ -606,4 +606,126 @@ def test_questions_needed_matches_full_path_or_unique_last_segment_once_per_fiel
 
 def test_scorer_version():
     from nlipeval.scoring.score import SCORER_VERSION
-    assert SCORER_VERSION == "1.1.0"
+    assert SCORER_VERSION == "1.2.0"
+
+
+# --------------------------------------------------------------------------- 08a C9: optional answer fields
+
+def _l2_task():
+    """L2 v2.0.0 client: verificationResult required; lastLocationTime and matchRate optional."""
+    for p in sorted(TASKS_DIR.glob("L2/L2-m*-v2.0.0.json")):
+        t = json.loads(p.read_text(encoding="utf-8"))
+        r = (t["gold_client_answer"] or {}).get("result") or {}
+        if t["gold_client_answer"]["status"] == "done" and "lastLocationTime" in r:
+            return t
+    raise AssertionError("no L2 v2.0.0 task with lastLocationTime")
+
+
+def _answer(task, result):
+    return compare_response_understanding({"status": "done", "result": result}, task)
+
+
+def test_c9_required_field_missing_is_wrong():
+    t = _l2_task()
+    r = dict(t["gold_client_answer"]["result"]); r.pop("verificationResult")
+    _, ok, mism, inc = _answer(t, r)
+    assert ok is False and mism and inc is False
+
+
+def test_c9_optional_field_absent_is_correct_and_incomplete():
+    t = _l2_task()
+    r = dict(t["gold_client_answer"]["result"]); r.pop("lastLocationTime")
+    _, ok, mism, inc = _answer(t, r)
+    assert ok is True and mism == [] and inc is True
+
+
+def test_c9_complete_answer_is_not_incomplete():
+    t = _l2_task()
+    _, ok, _, inc = _answer(t, dict(t["gold_client_answer"]["result"]))
+    assert ok is True and inc is False
+
+
+def test_c9_optional_field_present_but_wrong_is_wrong():
+    t = _l2_task()
+    r = dict(t["gold_client_answer"]["result"]); r["lastLocationTime"] = "2023-01-01T00:00:00Z"
+    _, ok, mism, inc = _answer(t, r)
+    assert ok is False and mism and inc is False
+
+
+def test_c9_incomplete_is_recorded_in_scores():
+    t = _l2_task()
+    r = dict(t["gold_client_answer"]["result"]); r.pop("lastLocationTime")
+    gc = t["gold_calls"][0]
+    session = {"session_id": "inc", "task_id": t["task_id"], "termination": "final", "n_interactions": 0,
+               "executed_calls": [{**gc, "status": t["gold_backend_response"]["status"],
+                                   "response_body": t["gold_backend_response"]["body"], "ts": "x"}],
+               "client_final": {"status": "done", "result": r}}
+    b = [{"seq": 1, "resolved_device": t["world_ref"]["device"], "identifiers_consistent": True}]
+    sc = score_session(session, t, b)
+    assert sc["response_correct"] is True and sc["response_incomplete"] is True and sc["end_to_end"] is True
+
+
+def test_c9_echo_fields_are_not_in_the_answer_schemas():
+    import yaml
+    for api in ("L2", "L3"):
+        text = (ROOT / "config" / "answer_schemas" / f"{api}.yaml").read_text()
+        doc = yaml.safe_load(text)["schemas"]
+        for v, sch in doc.items():
+            for one in ([sch] if "properties" in sch else list(sch.values())):
+                props = one.get("properties", {}) if isinstance(one, dict) else {}
+                assert "device" not in props and "ueId" not in props, (api, v)
+
+
+def test_c9_echo_equal_to_native_request_is_accepted_other_is_wrong():
+    t = _l2_task()
+    native_device = t["client_native_request"]["body"]["device"] if "device" in (t["client_native_request"].get("body") or {}) else None
+    assert native_device is not None
+    r = dict(t["gold_client_answer"]["result"])
+    _, ok, _, _ = _answer(t, {**r, "device": native_device})
+    assert ok is True
+    _, ok, mism, _ = _answer(t, {**r, "device": {"phoneNumber": "+9909999999"}})
+    assert ok is False and mism
+
+
+def test_c9_unknown_extra_field_is_wrong():
+    t = _l2_task()
+    _, ok, _, _ = _answer(t, {**t["gold_client_answer"]["result"], "invented": 1})
+    assert ok is False
+
+
+# --------------------------------------------------------------------------- 08a C10: L1 precedence
+
+def _l1_both(version):
+    for p in sorted(TASKS_DIR.glob(f"L1/L1-m*-{version}.json")):
+        t = json.loads(p.read_text(encoding="utf-8"))
+        if t["gold_client_answer"].get("alternatives"):
+            return t
+    raise AssertionError("no DATA+SMS task")
+
+
+@pytest.mark.parametrize("version,key", [("v0.5.1", "connectivityStatus"), ("v0.6.0", "reachabilityStatus")])
+def test_c10_data_and_sms_device_accepts_either_but_not_other_values(version, key):
+    t = _l1_both(version)
+    gold = t["gold_client_answer"]["result"]
+    assert gold[key] == "CONNECTED_DATA"
+    for good in ("CONNECTED_DATA", "CONNECTED_SMS"):
+        _, ok, _, _ = _answer(t, {**gold, key: good})
+        assert ok is True, good
+    for bad in ("NOT_CONNECTED", "unrepresentable", "DATA"):
+        _, ok, _, _ = _answer(t, {**gold, key: bad})
+        assert ok is False, bad
+
+
+def test_c10_only_data_and_sms_devices_have_the_alternative():
+    n_alt = 0
+    for p in sorted(TASKS_DIR.glob("L1/*.json")):
+        t = json.loads(p.read_text(encoding="utf-8"))
+        ga = t["gold_client_answer"]
+        if ga["status"] != "done" or t["client_version"] == "v1.0.0":
+            assert "alternatives" not in ga, t["task_id"]
+            continue
+        body = t["gold_backend_response"]["body"]
+        both = bool(body.get("reachable")) and {"DATA", "SMS"} <= set(body.get("connectivity") or [])
+        assert bool(ga.get("alternatives")) is both, t["task_id"]
+        n_alt += both
+    assert n_alt == 34   # 24 main + 10 pilot instances (12 + 12 main, 5 + 5 pilot)

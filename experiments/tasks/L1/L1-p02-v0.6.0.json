@@ -81,7 +81,13 @@
     "result": {
       "reachabilityStatus": "CONNECTED_DATA",
       "lastStatusTime": "2026-12-01T11:59:50Z"
-    }
+    },
+    "alternatives": [
+      {
+        "reachabilityStatus": "CONNECTED_SMS",
+        "lastStatusTime": "2026-12-01T11:59:50Z"
+      }
+    ]
   },
   "expected_refusal": null,
   "refusal_predictable": false,

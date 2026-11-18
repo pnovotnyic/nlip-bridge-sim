@@ -20,7 +20,7 @@
     "body": {
       "duration": 7200,
       "ueId": {
-        "msisdn": "9901000020"
+        "msisdn": "+9901000020"
       },
       "asId": {
         "ipv6addr": "2001:db8:b::10"
@@ -53,9 +53,6 @@
       },
       "duration": {
         "type": "integer"
-      },
-      "ueId": {
-        "type": "object"
       },
       "asId": {
         "type": "object"

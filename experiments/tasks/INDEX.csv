@@ -1,5 +1,5 @@
 task_id,intent_id,pilot,api,operation,client_version,server_version,versions_behind,breaking_crossed,breaking_crossed_ops,catalogue_breaking_crossed,prompt_half,pilot_round,gold_status,expected_refusal,missing_info,change_tags_request,change_tags_response
-L1-m01-v0.5.1,m01,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,True,,done,,,renamed,renamed|restructured
+L1-m01-v0.5.1,m01,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,4,True,,done,,,renamed|unit_format,renamed|restructured
 L1-m01-v0.6.0,m01,False,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,True,,done,,,,restructured
 L1-m01-v1.0.0,m01,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,True,,done,,,,
 L1-m02-v0.5.1,m02,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,,done,,,renamed,renamed|restructured
@@ -8,7 +8,7 @@ L1-m02-v1.0.0,m02,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,,don
 L1-m03-v0.5.1,m03,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,True,,done,,,renamed,renamed|restructured
 L1-m03-v0.6.0,m03,False,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,True,,done,,,,restructured
 L1-m03-v1.0.0,m03,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,True,,done,,,,
-L1-m04-v0.5.1,m04,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,4,False,,done,,,renamed|unit_format,renamed|restructured
+L1-m04-v0.5.1,m04,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,,done,,,renamed,renamed|restructured
 L1-m04-v0.6.0,m04,False,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,False,,done,,,,restructured
 L1-m04-v1.0.0,m04,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,,done,,,,
 L1-m05-v0.5.1,m05,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,True,,done,,,renamed,renamed|restructured
@@ -35,7 +35,7 @@ L1-m11-v1.0.0,m11,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,True,,done
 L1-m12-v0.5.1,m12,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,,done,,,renamed,renamed|restructured
 L1-m12-v0.6.0,m12,False,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,False,,done,,,,restructured
 L1-m12-v1.0.0,m12,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,,done,,,,
-L1-m13-v0.5.1,m13,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,True,,done,,,renamed,renamed|restructured
+L1-m13-v0.5.1,m13,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,4,True,,done,,,renamed|unit_format,renamed|restructured
 L1-m13-v0.6.0,m13,False,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,True,,done,,,,restructured
 L1-m13-v1.0.0,m13,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,True,,done,,,,
 L1-m14-v0.5.1,m14,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,,done,,,renamed,renamed|restructured
@@ -44,7 +44,7 @@ L1-m14-v1.0.0,m14,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,,don
 L1-m15-v0.5.1,m15,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,True,,done,,,renamed,renamed|restructured
 L1-m15-v0.6.0,m15,False,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,True,,done,,,,restructured
 L1-m15-v1.0.0,m15,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,True,,done,,,,
-L1-m16-v0.5.1,m16,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,4,False,,done,,,renamed|unit_format,renamed|restructured
+L1-m16-v0.5.1,m16,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,,done,,,renamed,renamed|restructured
 L1-m16-v0.6.0,m16,False,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,False,,done,,,,restructured
 L1-m16-v1.0.0,m16,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,,done,,,,
 L1-m17-v0.5.1,m17,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,True,,done,,,renamed,renamed|restructured
@@ -83,13 +83,13 @@ L1-m27-v1.0.0,m27,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,True,,done
 L1-m28-v0.5.1,m28,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,,done,,,renamed,renamed|restructured
 L1-m28-v0.6.0,m28,False,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,False,,done,,,,restructured
 L1-m28-v1.0.0,m28,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,,done,,,,
-L1-m29-v0.5.1,m29,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,True,,done,,,renamed,renamed|restructured
+L1-m29-v0.5.1,m29,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,4,True,,done,,,renamed|unit_format,renamed|restructured
 L1-m29-v0.6.0,m29,False,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,True,,done,,,,restructured
 L1-m29-v1.0.0,m29,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,True,,done,,,,
 L1-m30-v0.5.1,m30,False,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,,done,,device.ipv6Address,renamed,renamed|restructured
 L1-m30-v0.6.0,m30,False,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,False,,done,,device.ipv6Address,,restructured
 L1-m30-v1.0.0,m30,False,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,,done,,device.ipv6Address,,
-L1-p01-v0.5.1,p01,True,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,A,done,,,renamed,renamed|restructured
+L1-p01-v0.5.1,p01,True,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,4,False,A,done,,,renamed|unit_format,renamed|restructured
 L1-p01-v0.6.0,p01,True,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,False,A,done,,,,restructured
 L1-p01-v1.0.0,p01,True,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,A,done,,,,
 L1-p02-v0.5.1,p02,True,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,A,done,,,renamed,renamed|restructured
@@ -98,7 +98,7 @@ L1-p02-v1.0.0,p02,True,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,A,don
 L1-p03-v0.5.1,p03,True,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,A,done,,,renamed,renamed|restructured
 L1-p03-v0.6.0,p03,True,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,False,A,done,,,,restructured
 L1-p03-v1.0.0,p03,True,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,A,done,,,,
-L1-p04-v0.5.1,p04,True,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,4,False,A,done,,,renamed|unit_format,renamed|restructured
+L1-p04-v0.5.1,p04,True,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,A,done,,,renamed,renamed|restructured
 L1-p04-v0.6.0,p04,True,L1,retrieveReachability,v0.6.0,v1.0.0,1,2,2,2,False,A,done,,,,restructured
 L1-p04-v1.0.0,p04,True,L1,retrieveReachability,v1.0.0,v1.0.0,0,0,0,0,False,A,done,,,,
 L1-p05-v0.5.1,p05,True,L1,retrieveReachability,v0.5.1,v1.0.0,2,8,3,3,False,A,done,,,renamed,renamed|restructured
